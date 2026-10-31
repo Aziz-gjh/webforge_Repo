@@ -64,6 +64,18 @@ function checkStartTime(date: string, startHour: number, tripLength: number, set
     throw new BookingError('blocked', 'The Provider is unavailable at that time.');
 }
 
+// The daily Reminder run only covers tomorrow. A trip starting within about two days may already
+// have missed it, so ask api/remind-now, which decides and sends at most once (ADR 0003).
+// Fire and forget: a failed request never blocks the booking itself.
+function requestReminder(bookingId: string, startAt: Date) {
+  const user = auth.currentUser;
+  if (!user || startAt.getTime() - Date.now() > 2 * 86_400_000) return;
+  user.getIdToken()
+    .then(token => fetch(`/api/remind-now?booking=${encodeURIComponent(bookingId)}`,
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } }))
+    .catch(() => {});
+}
+
 export async function getSites(): Promise<Site[]> {
   try {
     const snap = await getDocs(collection(db, 'sites'));
@@ -116,6 +128,7 @@ export async function createBooking(input: { site: Site; date: string; startHour
     });
   } catch (e) { throw await explainFailure(e, slotKeys, bookingRef.id) }
 
+  requestReminder(bookingRef.id, startAt);
   const now = new Date();
   return { id: bookingRef.id, ...booking, startAt, createdAt: now, updatedAt: now };
 }
@@ -128,7 +141,7 @@ export async function rescheduleBooking(bookingId: string, to: { date: string; s
   let newKeys: string[] = [];
 
   try {
-    return await runTransaction(db, async tx => {
+    const moved = await runTransaction(db, async tx => {
       const snap = await tx.get(ref);
       if (!snap.exists()) throw new BookingError('invalid', 'Booking not found.');
       const current = toBooking(snap);
@@ -154,6 +167,8 @@ export async function rescheduleBooking(bookingId: string, to: { date: string; s
       });
       return { ...current, date: to.date, startHour: to.startHour, startAt, slotKeys: newKeys, updatedAt: new Date(), reminderSentFor: null };
     });
+    requestReminder(bookingId, moved.startAt);
+    return moved;
   } catch (e) { throw await explainFailure(e, newKeys, bookingId) }
 }
 

@@ -9,6 +9,7 @@ const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000;
 
 export interface ReminderBooking {
   id: string;
+  customerId: string;
   date: string;
   status: string;
   customerName: string;
@@ -41,11 +42,23 @@ export interface ReminderDependencies {
   store: ReminderStore;
   send(email: ReminderEmail): Promise<void>;
   appUrl: string;
+  /** Only needed by api/remind-now: returns the uid of a valid Firebase ID token. */
+  verifyIdToken?(token: string): Promise<string>;
 }
 
 export function tomorrowInRiyadh(now: Date): string {
   return new Date(now.getTime() + RIYADH_OFFSET_MS + 86_400_000)
     .toISOString().slice(0, 10);
+}
+
+export function todayInRiyadh(now: Date): string {
+  return new Date(now.getTime() + RIYADH_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// The daily run (vercel.json, 18:00 Riyadh) the day before `date` sends that date's Reminders.
+// A Booking made or moved after that run would get none, so api/remind-now sends it at once.
+export function dailyRunStillAhead(date: string, now: Date): boolean {
+  return now.getTime() < Date.parse(`${date}T18:00:00+03:00`) - 86_400_000;
 }
 
 function escapeHtml(value: string): string {
@@ -54,7 +67,8 @@ function escapeHtml(value: string): string {
   })[character]!);
 }
 
-function makeEmail(booking: ReminderBooking, appUrl: string): ReminderEmail {
+function makeEmail(booking: ReminderBooking, appUrl: string, now: Date): ReminderEmail {
+  const when = booking.date === todayInRiyadh(now) ? 'today' : 'tomorrow';
   const date = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Riyadh', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   }).format(booking.startAt);
@@ -67,9 +81,9 @@ function makeEmail(booking: ReminderBooking, appUrl: string): ReminderEmail {
     .digest('hex');
   return {
     to: booking.customerEmail,
-    subject: `Your trip to ${booking.siteName} is tomorrow`,
-    text: `Hello ${booking.customerName},\n\nYour private trip to ${booking.siteName} is tomorrow.\n${date}\n${time}\nParty Size: ${booking.partySize}\n\nView My trips: ${tripsUrl}\n\nAlUla Site Tours`,
-    html: `<h1>Your trip is tomorrow</h1><p>Hello ${escapeHtml(booking.customerName)},</p><p>Your private trip to <strong>${escapeHtml(booking.siteName)}</strong> is tomorrow.</p><p>${escapeHtml(date)}<br>${escapeHtml(time)}<br>Party Size: ${booking.partySize}</p><p><a href="${escapeHtml(tripsUrl)}">View My trips</a></p><p>AlUla Site Tours</p>`,
+    subject: `Your trip to ${booking.siteName} is ${when}`,
+    text: `Hello ${booking.customerName},\n\nYour private trip to ${booking.siteName} is ${when}.\n${date}\n${time}\nParty Size: ${booking.partySize}\n\nView My trips: ${tripsUrl}\n\nAlUla Site Tours`,
+    html: `<h1>Your trip is ${when}</h1><p>Hello ${escapeHtml(booking.customerName)},</p><p>Your private trip to <strong>${escapeHtml(booking.siteName)}</strong> is ${when}.</p><p>${escapeHtml(date)}<br>${escapeHtml(time)}<br>Party Size: ${booking.partySize}</p><p><a href="${escapeHtml(tripsUrl)}">View My trips</a></p><p>AlUla Site Tours</p>`,
     idempotencyKey,
   };
 }
@@ -107,7 +121,7 @@ export async function runReminders(dependencies: ReminderDependencies, now = new
         continue;
       }
       validateBooking(booking);
-      await dependencies.send(makeEmail(booking, dependencies.appUrl));
+      await dependencies.send(makeEmail(booking, dependencies.appUrl, now));
       sent += 1;
       // Never put an old marker onto a concurrently rescheduled Booking.
       await dependencies.store.markSentIfCurrent(booking, booking.slotKeys[0]);
@@ -120,7 +134,22 @@ export async function runReminders(dependencies: ReminderDependencies, now = new
   return { sent, skipped, failed };
 }
 
-function productionDependencies(env: NodeJS.ProcessEnv): ReminderDependencies {
+// One Customer's own Booking, right after they made or moved it. Same checks, email and
+// idempotency key as the daily run, so the two can never send it twice.
+export async function remindNow(
+  dependencies: ReminderDependencies, bookingId: string, uid: string, now = new Date(),
+): Promise<'sent' | 'skipped'> {
+  const booking = await dependencies.store.read(bookingId);
+  if (!booking || booking.customerId !== uid || booking.status !== 'confirmed' ||
+    booking.reminderSentFor === booking.slotKeys[0] || booking.startAt <= now ||
+    dailyRunStillAhead(booking.date, now)) return 'skipped';
+  validateBooking(booking);
+  await dependencies.send(makeEmail(booking, dependencies.appUrl, now));
+  await dependencies.store.markSentIfCurrent(booking, booking.slotKeys[0]);
+  return 'sent';
+}
+
+export function productionDependencies(env: NodeJS.ProcessEnv): ReminderDependencies {
   if (!env.FIREBASE_SERVICE_ACCOUNT || !env.RESEND_API_KEY || !env.APP_URL) {
     throw new Error('Missing Reminder configuration');
   }
@@ -148,6 +177,12 @@ function productionDependencies(env: NodeJS.ProcessEnv): ReminderDependencies {
 
   return {
     appUrl: appUrl.origin,
+    async verifyIdToken(token) {
+      // Loaded on use: firebase-admin/auth pulls in an ESM-only dependency that older local
+      // Node versions cannot require, and the daily run never needs it.
+      const { getAuth } = await import('firebase-admin/auth');
+      return (await getAuth(app).verifyIdToken(token)).uid;
+    },
     store: {
       async listIds(date) {
         const results = await db.collection('bookings')
@@ -161,7 +196,7 @@ function productionDependencies(env: NodeJS.ProcessEnv): ReminderDependencies {
         if (!(data.startAt instanceof Timestamp) || !(data.updatedAt instanceof Timestamp) ||
           !Array.isArray(data.slotKeys)) throw new Error('Invalid Booking timestamps or Slots');
         return {
-          id, date: data.date, status: data.status,
+          id, customerId: data.customerId, date: data.date, status: data.status,
           customerName: data.customerName, customerEmail: data.customerEmail,
           siteName: data.siteName, startHour: data.startHour,
           tripLength: data.tripLength, partySize: data.partySize,

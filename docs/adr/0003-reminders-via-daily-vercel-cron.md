@@ -15,5 +15,5 @@ The endpoint rejects any request without `Authorization: Bearer $CRON_SECRET`. T
 ## Consequences
 
 - This is the only code with admin access, which ignores the security rules. It reads Bookings and writes only `reminderSentFor`.
-- A Booking made or rescheduled for tomorrow after that day's run gets no Reminder. This is a known limitation.
+- A Booking made or rescheduled after the daily run that covers it (for tomorrow after 18:00, or for later today) would miss its Reminder. So right after such a change the app calls `POST /api/remind-now?booking=<id>` with the Customer's Firebase ID token. The function checks the token belongs to the Booking's Customer, skips it if the daily run is still ahead, and otherwise sends the same email at once ("today" or "tomorrow"). It uses the same `reminderSentFor` marker and Resend idempotency key as the daily run, so the two paths can never send twice.
 - `vercel.json` must not route `/api/*` to `index.html`.

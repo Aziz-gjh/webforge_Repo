@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
-  createReminderHandler, runReminders, tomorrowInRiyadh,
+  createReminderHandler, dailyRunStillAhead, remindNow, runReminders, tomorrowInRiyadh,
   type ReminderBooking, type ReminderDependencies, type ReminderEmail,
 } from '../../api/send-reminders';
+import { createRemindNowHandler } from '../../api/remind-now';
 
 const now = new Date('2026-10-31T15:00:00Z');
 
 function booking(overrides: Partial<ReminderBooking> = {}): ReminderBooking {
   return {
-    id: 'booking-a', date: '2026-11-01', status: 'confirmed',
+    id: 'booking-a', customerId: 'customer-1', date: '2026-11-01', status: 'confirmed',
     customerName: 'Customer One', customerEmail: 'customer@example.com',
     siteName: 'Hegra', startHour: 10, tripLength: 2, partySize: 4,
     slotKeys: ['2026-11-01T10', '2026-11-01T11'],
@@ -34,6 +35,10 @@ function fixture(records: ReminderBooking[] = [booking()]) {
       }),
     },
     send: vi.fn(async (email) => { sent.push(email); }),
+    verifyIdToken: vi.fn(async (token: string) => {
+      if (token !== 'good-token') throw new Error('Invalid token');
+      return 'customer-1';
+    }),
   };
   return { dependencies, rows, sent };
 }
@@ -181,5 +186,91 @@ describe('Reminder endpoint access', () => {
     expect(result.body.failed).toBe(1);
     expect(JSON.stringify(result.body)).not.toContain('re_private-secret');
     expect(JSON.stringify(result.body)).not.toContain('customer@example.com');
+  });
+});
+
+// Riyadh is UTC+3, so the daily run for 1 Nov happens at 2026-10-31T15:00:00Z.
+const beforeRun = new Date('2026-10-31T14:59:59Z');
+const afterRun = new Date('2026-10-31T16:00:00Z');
+
+describe('Immediate Reminder for a Booking made after the daily run', () => {
+  it('knows whether the daily run for a date is still ahead', () => {
+    expect(dailyRunStillAhead('2026-11-01', beforeRun)).toBe(true);
+    expect(dailyRunStillAhead('2026-11-01', now)).toBe(false);
+    expect(dailyRunStillAhead('2026-11-02', afterRun)).toBe(true);
+  });
+
+  it('sends at once for tomorrow when booked after the daily run, and only once', async () => {
+    const { dependencies, rows, sent } = fixture();
+    expect(await remindNow(dependencies, 'booking-a', 'customer-1', afterRun)).toBe('sent');
+    expect(sent[0].subject).toBe('Your trip to Hegra is tomorrow');
+    expect(rows.get('booking-a')?.reminderSentFor).toBe('2026-11-01T10');
+    expect(await remindNow(dependencies, 'booking-a', 'customer-1', afterRun)).toBe('skipped');
+    expect(sent).toHaveLength(1);
+  });
+
+  it('uses the same idempotency key as the daily run, so a race cannot send twice', async () => {
+    const daily = fixture();
+    await runReminders(daily.dependencies, now);
+    const immediate = fixture();
+    await remindNow(immediate.dependencies, 'booking-a', 'customer-1', afterRun);
+    expect(immediate.sent[0].idempotencyKey).toBe(daily.sent[0].idempotencyKey);
+  });
+
+  it('leaves it to the daily run when that run is still ahead', async () => {
+    const { dependencies } = fixture();
+    expect(await remindNow(dependencies, 'booking-a', 'customer-1', beforeRun)).toBe('skipped');
+    expect(dependencies.send).not.toHaveBeenCalled();
+  });
+
+  it('sends a same-day Booking and says "today"', async () => {
+    const { dependencies, sent } = fixture([booking({
+      date: '2026-10-31', startHour: 21, tripLength: 1, slotKeys: ['2026-10-31T21'],
+      startAt: new Date('2026-10-31T18:00:00Z'),
+    })]);
+    expect(await remindNow(dependencies, 'booking-a', 'customer-1', afterRun)).toBe('sent');
+    expect(sent[0].subject).toBe('Your trip to Hegra is today');
+    expect(sent[0].text).toContain('is today.');
+  });
+
+  it('never sends for someone else’s, cancelled or started Booking', async () => {
+    const { dependencies } = fixture([
+      booking(),
+      booking({ id: 'cancelled', status: 'cancelled' }),
+      booking({ id: 'started', date: '2026-10-31', startHour: 18, tripLength: 1, slotKeys: ['2026-10-31T18'],
+        startAt: new Date('2026-10-31T15:00:00Z') }),
+    ]);
+    expect(await remindNow(dependencies, 'booking-a', 'someone-else', afterRun)).toBe('skipped');
+    expect(await remindNow(dependencies, 'cancelled', 'customer-1', afterRun)).toBe('skipped');
+    expect(await remindNow(dependencies, 'started', 'customer-1', afterRun)).toBe('skipped');
+    expect(dependencies.send).not.toHaveBeenCalled();
+  });
+});
+
+describe('Immediate Reminder endpoint access', () => {
+  async function post(dependencies: ReminderDependencies | undefined, {
+    method = 'POST', url = '/api/remind-now?booking=booking1', authorization = 'Bearer good-token',
+  } = {}) {
+    let body = '';
+    const response = { statusCode: 200, setHeader() {}, end(value: string) { body = value; } };
+    await createRemindNowHandler({ dependencies: dependencies && (() => dependencies), now: () => afterRun })(
+      { method, url, headers: { authorization } } as unknown as IncomingMessage,
+      response as unknown as ServerResponse,
+    );
+    return { status: response.statusCode, body: JSON.parse(body) };
+  }
+
+  it('sends for the signed-in owner', async () => {
+    const { dependencies } = fixture([booking({ id: 'booking1' })]);
+    expect(await post(dependencies)).toEqual({ status: 200, body: { result: 'sent' } });
+  });
+
+  it('rejects other methods, a missing booking id, and missing or invalid sign-in', async () => {
+    const { dependencies } = fixture([booking({ id: 'booking1' })]);
+    expect((await post(dependencies, { method: 'GET' })).status).toBe(405);
+    expect((await post(dependencies, { url: '/api/remind-now' })).status).toBe(400);
+    expect((await post(dependencies, { authorization: '' })).status).toBe(400);
+    expect((await post(dependencies, { authorization: 'Bearer bad-token' })).status).toBe(401);
+    expect(dependencies.send).not.toHaveBeenCalled();
   });
 });
