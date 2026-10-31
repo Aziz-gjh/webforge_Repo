@@ -89,6 +89,7 @@ export function Footer() {
               <li><Link to="/book">{t('nav.book')}</Link></li>
               <li><Link to="/trips">{t('nav.trips')}</Link></li>
               <li><Link to="/signin">{t('nav.signin')}</Link></li>
+              <li><Link to="/signin?mode=signup">{t('nav.signup')}</Link></li>
             </ul>
           </div>
         </div>
