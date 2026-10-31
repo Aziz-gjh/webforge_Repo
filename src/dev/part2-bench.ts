@@ -68,7 +68,8 @@ $('race').onclick = () => run(async () => {
 
   if (winner) {
     const fake = doc(collection(db, 'bookings'));
-    const { id: _winnerId, ...fields } = winner.value;
+    const fields: Partial<Booking> = { ...winner.value };
+    delete fields.id;
     const batch = writeBatch(db);
     batch.set(fake, { ...fields, startAt: Timestamp.fromDate(winner.value.startAt), createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     batch.set(doc(db, 'slotLocks', winner.value.slotKeys[0]), { bookingId: fake.id, date: d, hour: h });
