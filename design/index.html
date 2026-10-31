@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="morning">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>رحلتنا · Rihlatna</title>
+<meta name="description" content="Guided trips to Elephant Rock, Hegra, At-Turaif, the Edge of the World, Al-Balad and Rijal Almaa. Pick a destination and a time that suits you.">
+<meta name="theme-color" content="#F8F4EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="preload" as="image" href="img/land-day-1920.webp" imagesrcset="img/land-day-1080.webp 1080w, img/land-day-1920.webp 1920w" imagesizes="100vw">
+<link rel="stylesheet" href="theme.css">
+<script src="i18n.js"></script>
+<script src="theme.js"></script>
+<style>
+  /* ================= HERO: a layered scene ================= */
+  .hero { position: relative; height: 100svh; min-height: 640px; max-height: 1000px; overflow: hidden; color: #FFFFFF; background: #0F172A; isolation: isolate; }
+  .scene { position: absolute; inset: 0; }
+  .scene > * { position: absolute; inset: 0; }
+
+  .sky-day { background: linear-gradient(180deg, #6E98E1 0%, #8FB3ED 37%, #BDCCE7 66%, #BDCCE7 100%); }
+  .sky-dusk { background: linear-gradient(180deg, #2C2F5E 0%, #6E5A92 34%, #D98A6B 60%, #F2C47E 74%, #F2C47E 100%); opacity: 0; }
+  .sky-night { background: linear-gradient(180deg, #0F172A 0%, #1E293B 55%, #6D5B93 80%, #6D5B93 100%); opacity: 0; transition: opacity 1100ms var(--ease) 500ms; }
+  :root[data-theme="night"] .sky-night { opacity: 1; transition: opacity 1500ms var(--ease) 650ms; }
+  :root.sky-ready[data-theme="night"] .sky-dusk { animation: dusk 2400ms var(--ease) both; }
+  :root.sky-ready[data-theme="morning"] .sky-dusk { animation: dawn 2000ms var(--ease) both; }
+  @keyframes dusk { 0% { opacity: 0; } 32% { opacity: 1; } 70% { opacity: 0.55; } 100% { opacity: 0; } }
+  @keyframes dawn { 0% { opacity: 0; } 45% { opacity: 0.85; } 100% { opacity: 0; } }
+
+  /* Daylight: no sun disc, just warm light falling from the upper corner and a soft warm horizon. */
+  .sunlight {
+    background:
+      radial-gradient(44% 56% at 88% -6%, rgba(255, 246, 224, 0.62) 0%, rgba(255, 238, 206, 0.26) 34%, rgba(255, 232, 196, 0) 68%),
+      linear-gradient(200deg, rgba(255, 236, 200, 0.18) 0%, rgba(255, 236, 200, 0) 45%);
+    transition: opacity 1200ms var(--ease) 400ms, transform 1600ms var(--ease) 400ms;
+  }
+  :root[data-theme="night"] .sunlight { opacity: 0; transform: translateY(18%); transition: opacity 1100ms var(--ease) 200ms, transform 1800ms var(--ease); }
+  .glow-day { background: radial-gradient(60% 34% at 60% 80%, rgba(255, 226, 176, 0.32), transparent 72%); transition: opacity 1200ms var(--ease) 300ms; }
+  .glow-night { background: radial-gradient(70% 34% at 50% 82%, rgba(184, 164, 216, 0.42), transparent 72%); opacity: 0; transition: opacity 900ms var(--ease); }
+  :root[data-theme="night"] .glow-day { opacity: 0; transition: opacity 900ms var(--ease); }
+  :root[data-theme="night"] .glow-night { opacity: 1; transition: opacity 1600ms var(--ease) 1100ms; }
+
+  .stars { inset: 0 0 35% 0; }
+  .star { position: absolute; border-radius: 50%; background: #FFF8E8; opacity: 0; transition: opacity 500ms var(--ease); }
+  :root[data-theme="night"] .star { opacity: var(--o); transition: opacity 1400ms var(--ease) var(--d); }
+  :root[data-theme="night"] .star.tw { animation: twinkle var(--t) ease-in-out var(--td) infinite; }
+  @keyframes twinkle { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.4); } }
+
+  .moon {
+    inset: auto; top: 20%; left: 26%; width: 46px; height: 46px; border-radius: 50%;
+    box-shadow: inset -11px -5px 0 0 #F6E7C8;
+    filter: drop-shadow(0 0 10px rgba(246, 231, 200, 0.4));
+    transform: translateY(24vh) rotate(-24deg); opacity: 0;
+    transition: transform 900ms var(--ease), opacity 600ms var(--ease);
+  }
+  .moon::before { content: ''; position: absolute; inset: -60px; border-radius: 50%; background: radial-gradient(circle, rgba(246, 231, 200, 0.12), rgba(184, 164, 216, 0.08) 40%, transparent 68%); }
+  :root[data-theme="night"] .moon { transform: translateY(0) rotate(-24deg); opacity: 1; transition: transform 2200ms var(--ease-out) 900ms, opacity 1600ms var(--ease) 900ms; }
+
+  .land { width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; }
+  .land-day { transition: opacity 1200ms var(--ease) 200ms, filter 1300ms var(--ease) 500ms; }
+  .land-night { opacity: 0; transition: opacity 1200ms var(--ease) 900ms; }
+  :root[data-theme="night"] .land-day { opacity: 0; filter: sepia(0.35) saturate(1.3) brightness(0.8) hue-rotate(-8deg); transition: filter 1000ms var(--ease), opacity 1500ms var(--ease) 700ms; }
+  :root[data-theme="night"] .land-night { opacity: 1; transition: opacity 1500ms var(--ease) 600ms; }
+
+  .scrim { position: absolute; inset: 0; background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0) 18%),
+      linear-gradient(0deg, rgba(25, 18, 12, 0.66) 0%, rgba(25, 18, 12, 0.22) 32%, rgba(25, 18, 12, 0) 52%); }
+  :root[data-theme="night"] .scrim { background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0) 18%),
+      linear-gradient(0deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.3) 34%, rgba(15, 23, 42, 0) 54%); }
+
+  .hero-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: clamp(72px, 11vh, 112px); }
+  .hero-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+  .hero-text { max-width: 620px; }
+  .hero h1 { font-size: clamp(42px, 6.2vw, 92px); line-height: 0.98; letter-spacing: -0.02em; margin: 14px 0 16px; }
+  :root[lang="ar"] .hero h1 { font-size: clamp(36px, 4.6vw, 66px); line-height: 1.3; letter-spacing: 0; font-weight: 700; }
+  .hero h1 span { display: block; }
+  .hero h1 span + span { font-style: italic; color: #F3D9A4; transition: color 1400ms var(--ease) 700ms; }
+  :root[lang="ar"] .hero h1 span + span { font-style: normal; }
+  :root[data-theme="night"] .hero h1 span + span { color: #D8C9F0; }
+  .hero .label { color: #F3D9A4; transition: color 1400ms var(--ease) 700ms; }
+  :root[data-theme="night"] .hero .label { color: #D8C9F0; }
+  .hero-sub { margin: 0; max-width: 500px; font-size: clamp(15px, 1.3vw, 18px); line-height: 1.7; color: rgba(255, 255, 255, 0.92); }
+  .hero h1, .hero .label, .hero-sub, .where { text-shadow: 0 1px 16px rgba(20, 14, 8, 0.4); }
+
+  /* One quiet fade for the hero content on load. */
+  .rise { opacity: 0; transform: translateY(10px); transition: opacity 450ms ease-out 100ms, transform 450ms ease-out 100ms; }
+  .hero.is-in .rise { opacity: 1; transform: none; }
+
+  .where { text-align: end; font: 500 12px var(--ui); letter-spacing: var(--label-track); line-height: 1.9; color: rgba(255, 255, 255, 0.82); text-transform: uppercase; }
+  :root[lang="ar"] .where { font-size: 13px; text-transform: none; }
+  .where .when-day, .where .when-night { display: block; color: #FFFFFF; }
+  .where .when-night { display: none; }
+  :root[data-theme="night"] .where .when-night { display: block; }
+  :root[data-theme="night"] .where .when-day { display: none; }
+
+  /* Booking bar */
+  .finder {
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr auto; align-items: stretch;
+    background: var(--surface); color: var(--ink);
+    border-radius: var(--radius); padding: 6px; box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.6);
+    border: 1px solid transparent;
+    transition: background-color var(--theme-fade) var(--ease) 600ms, color var(--theme-fade) var(--ease) 600ms, border-color 900ms var(--ease) 900ms;
+  }
+  :root[data-theme="night"] .finder { border-color: rgba(184, 164, 216, 0.28); }
+  .field { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 10px 20px; border-radius: 6px; transition: background-color 200ms ease-out; }
+  .field + .field::before { content: ''; position: absolute; inset-inline-start: 0; top: 24%; bottom: 24%; width: 1px; background: var(--line); }
+  .field:hover, .field:focus-within { background: var(--accent-soft); }
+  .field .lbl { font: 600 11px var(--ui); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--muted); transition: color var(--theme-fade) var(--ease) 600ms; }
+  :root[lang="ar"] .field .lbl { font-size: 13px; text-transform: none; }
+  .field select {
+    appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: inherit;
+    font: 600 16px var(--ui); padding: 2px 0; padding-inline-end: 22px; cursor: pointer; width: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%239A6B3F' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 2px center;
+  }
+  :root[dir="rtl"] .field select { background-position: left 2px center; }
+  .field select:focus { outline: none; }
+  .field select option { color: #35291F; background: #FFFDF8; }
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; font-size: 17px; line-height: 1; transition: border-color 200ms ease-out; }
+  .stepper button:hover { border-color: var(--accent); }
+  .stepper output { font: 600 16px var(--ui); text-align: center; white-space: nowrap; min-width: 4.5em; }
+  .finder .btn { min-height: 58px; padding: 0 28px; }
+
+  .scroll-cue { position: absolute; z-index: 3; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255, 255, 255, 0.75); font: 500 11px var(--ui); letter-spacing: var(--label-track); text-transform: uppercase; text-decoration: none; }
+  :root[lang="ar"] .scroll-cue { font-size: 12px; text-transform: none; }
+  .scroll-cue .rail { width: 1px; height: 26px; background: rgba(255, 255, 255, 0.45); }
+
+  /* A soft dune edge where the hero meets the page. Static. */
+  .dunes { position: absolute; z-index: 1; left: 0; right: 0; bottom: -1px; height: 64px; pointer-events: none; color: var(--bg); transition: color var(--theme-fade) var(--ease) 500ms; }
+  .dunes svg { width: 100%; height: 100%; display: block; }
+  .dunes path { fill: currentColor; }
+
+  /* ================= SHARED SECTION BITS ================= */
+  .section { padding: var(--section) 0; }
+  .h2 { font-size: clamp(30px, 3.2vw, 44px); margin: 14px 0 0; }
+  :root[lang="ar"] .h2 { font-size: clamp(26px, 2.6vw, 36px); }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 40px; margin-bottom: 40px; }
+  .sec-head p { max-width: 420px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
+
+  /* ================= ABOUT ================= */
+  .about .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+  .about .body { margin: 16px 0 0; font-size: 17px; line-height: 1.8; color: var(--muted); max-width: 480px; }
+  .points { list-style: none; margin: 28px 0 32px; padding: 0; display: grid; gap: 14px; }
+  .points li { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 500; }
+  .points svg { flex: 0 0 20px; color: var(--palm); }
+  :root[data-theme="night"] .points svg { color: var(--lavender); }
+  .text-link { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; color: var(--accent); text-decoration: none; }
+  .text-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .duo { position: relative; padding-bottom: 56px; padding-inline-start: 56px; }
+  .duo .main { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); }
+  .duo .second { position: absolute; inset-inline-start: 0; bottom: 0; width: 38%; height: auto; aspect-ratio: 1 / 1; object-fit: cover; border-radius: var(--radius); border: 6px solid var(--bg); transition: border-color var(--theme-fade) var(--ease) 500ms; }
+  .duo figcaption { position: absolute; inset-inline-end: 14px; top: 14px; padding: 6px 10px; border-radius: 6px; background: rgba(15, 23, 42, 0.55); color: #FFFFFF; font-size: 12px; }
+
+  /* ================= PHOTO CARDS (shared by experiences + destinations) ================= */
+  .pcard { position: relative; display: block; overflow: hidden; border-radius: 14px; color: #FFFFFF; text-decoration: none; background: #1E293B; isolation: isolate; cursor: pointer; }
+  .pcard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+  .pcard img.loaded { transition: opacity 400ms ease-out, transform 600ms ease-out; }
+  .pcard::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(15, 23, 42, 0) 38%, rgba(15, 23, 42, 0.82) 100%); opacity: 0.9; transition: opacity 400ms ease-out; }
+  .pcard:hover img, .pcard:focus-visible img { transform: scale(1.03); }
+  .pcard:hover::after, .pcard:focus-visible::after { opacity: 1; }
+  .pcard .body { position: absolute; inset-inline: 0; bottom: 0; padding: 20px; display: flex; flex-direction: column; gap: 6px; transition: transform 400ms ease-out; }
+  .pcard:hover .body, .pcard:focus-visible .body { transform: translateY(-4px); }
+  .pcard .meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.82); }
+  .pcard .meta i { width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+  .pcard h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.1; }
+  :root[lang="ar"] .pcard h3 { font-weight: 600; font-size: 21px; line-height: 1.4; }
+  .pcard p { margin: 0; font-size: 14px; line-height: 1.55; color: rgba(255, 255, 255, 0.86); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .pcard .go { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; font-weight: 600; color: #F3D9A4; opacity: 0.9; transition: opacity 300ms ease-out; }
+  :root[data-theme="night"] .pcard .go { color: #D8C9F0; }
+  .pcard .go .arrow { transition: transform 300ms ease-out; }
+  .pcard:hover .go .arrow { transform: translateX(3px); }
+  :root[dir="rtl"] .pcard:hover .go .arrow { transform: scaleX(-1) translateX(3px); }
+  .pcard .count { position: absolute; top: 16px; inset-inline-start: 16px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px); }
+
+  /* ================= EXPERIENCES: an editorial 4-column grid with two wide cards ================= */
+  .exp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 280px; gap: 16px; }
+  .exp-grid .pcard:nth-child(6n+1), .exp-grid .pcard:nth-child(6n+6) { grid-column: span 2; }
+  .exp-grid .pcard:nth-child(6n+1) h3, .exp-grid .pcard:nth-child(6n+6) h3 { font-size: 34px; }
+  :root[lang="ar"] .exp-grid .pcard:nth-child(6n+1) h3, :root[lang="ar"] .exp-grid .pcard:nth-child(6n+6) h3 { font-size: 25px; }
+
+  /* ================= DESTINATIONS: filter tabs + a carousel with mixed card widths ================= */
+  .experiences, .alt { background: var(--bg-alt); transition: background-color var(--theme-fade) var(--ease) 500ms; }
+  .dest-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tab { min-height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; font: 500 14px var(--ui); transition: background-color 250ms ease-out, color 250ms ease-out, border-color 250ms ease-out; }
+  .tab:hover { border-color: var(--accent); }
+  .tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .tab small { opacity: 0.6; margin-inline-start: 4px; font-size: 12px; }
+  .arrows { display: flex; gap: 8px; }
+  .arrows button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: border-color 250ms ease-out, opacity 250ms ease-out; }
+  .arrows button:hover:not(:disabled) { border-color: var(--accent); }
+  .arrows button:disabled { opacity: 0.35; cursor: default; }
+  :root[dir="rtl"] .arrows svg { transform: scaleX(-1); }
+  .track { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; padding-bottom: 4px; margin-inline: calc(-1 * clamp(16px, 4vw, 40px)); padding-inline: clamp(16px, 4vw, 40px); scroll-padding-inline: clamp(16px, 4vw, 40px); }
+  .track::-webkit-scrollbar { display: none; }
+  .track .pcard { flex: 0 0 300px; height: 440px; scroll-snap-align: start; }
+  .track .pcard:nth-child(3n+2) { flex-basis: 420px; }
+  .track .pcard:nth-child(3n+3) { height: 440px; }
+  .track .pcard.enter { opacity: 0; transform: translateY(12px); }
+  .track .pcard { transition: opacity 400ms ease-out, transform 400ms ease-out; }
+
+  /* ================= HOW IT WORKS: intro + an animated vertical timeline ================= */
+  .how .grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+  .how .intro p { margin: 16px 0 28px; color: var(--muted); font-size: 16px; line-height: 1.8; max-width: 420px; }
+  .timeline { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .timeline::before { content: ''; position: absolute; top: 34px; bottom: 34px; inset-inline-start: 31px; width: 2px; background: var(--line); }
+  .timeline::after { content: ''; position: absolute; top: 34px; bottom: 34px; inset-inline-start: 31px; width: 2px; background: var(--accent); transform: scaleY(0); transform-origin: top; transition: transform 1200ms ease-out 200ms; }
+  .timeline.in::after { transform: scaleY(1); }
+  .tstep { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; align-items: start; padding: 18px; padding-inline-start: 0; }
+  .tstep .dot { position: relative; z-index: 1; justify-self: center; width: 36px; height: 36px; margin-top: 2px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--line); color: var(--muted); font: 600 14px 'DM Sans', sans-serif; transition: background-color 400ms ease-out, border-color 400ms ease-out, color 400ms ease-out; }
+  .timeline.in .tstep .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); transition-delay: var(--delay, 0ms); }
+  .tstep .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; transition: background-color var(--theme-fade) var(--ease) 500ms, border-color var(--theme-fade) var(--ease) 500ms; }
+  .tstep h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; line-height: 1.4; display: flex; align-items: center; gap: 10px; }
+  .tstep h3 svg { color: var(--accent); flex: 0 0 18px; }
+  .tstep p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+  /* ================= DESTINATION DETAILS: side panel on desktop, bottom sheet on phones ================= */
+  .sheet { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(500px, 100%); height: 100%; max-height: 100%; max-width: 100%; padding: 0; border: 0; background: var(--surface); color: var(--ink); box-shadow: -20px 0 60px -20px rgba(0, 0, 0, 0.35); opacity: 0; transform: translateX(24px); transition: opacity 350ms ease-out, transform 350ms ease-out; overflow: hidden; }
+  :root[dir="rtl"] .sheet { inset: 0 auto 0 0; transform: translateX(-24px); box-shadow: 20px 0 60px -20px rgba(0, 0, 0, 0.35); }
+  .sheet.show { opacity: 1; transform: none; }
+  .sheet::backdrop { background: rgba(15, 23, 42, 0); transition: background-color 350ms ease-out; }
+  .sheet.show::backdrop { background: rgba(15, 23, 42, 0.5); }
+  .sheet .scroll { height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
+  .sheet .photo { position: relative; flex: 0 0 auto; aspect-ratio: 16 / 11; overflow: hidden; }
+  .sheet .photo img { width: 100%; height: 100%; object-fit: cover; }
+  .sheet .close { position: absolute; top: 14px; inset-inline-end: 14px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(15, 23, 42, 0.55); color: #FFFFFF; cursor: pointer; display: grid; place-items: center; }
+  .sheet .close:hover { background: rgba(15, 23, 42, 0.75); }
+  .sheet .inner { padding: 24px 28px 0; display: flex; flex-direction: column; gap: 18px; flex: 1 0 auto; }
+  .sheet .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sheet .chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); }
+  .sheet h2 { margin: 0; font-size: 34px; }
+  :root[lang="ar"] .sheet h2 { font-size: 28px; }
+  .sheet .desc { margin: 0; font-size: 16px; line-height: 1.8; color: var(--muted); }
+  .sheet h4 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+  .sheet ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .sheet li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; line-height: 1.5; }
+  .sheet li svg { flex: 0 0 18px; margin-top: 2px; color: var(--palm); }
+  :root[data-theme="night"] .sheet li svg { color: var(--lavender); }
+  .sheet .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .sheet .facts div { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .sheet .facts span { font-size: 12px; color: var(--muted); }
+  .sheet .facts b { font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .sheet .note { margin: 0; font-size: 13px; color: var(--muted); }
+  .sheet .foot { position: sticky; bottom: 0; margin-top: 24px; padding: 16px 28px 20px; background: var(--surface); border-top: 1px solid var(--line); display: flex; gap: 10px; }
+  .sheet .foot .btn { flex: 1 1 auto; }
+
+  /* ================= FINAL CTA ================= */
+  .final { position: relative; min-height: 420px; display: grid; place-items: center; text-align: center; color: #FFFFFF; overflow: hidden; isolation: isolate; }
+  .final img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+  .final::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(53, 41, 31, 0.25) 0%, rgba(53, 41, 31, 0.7) 100%); }
+  .final::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(15, 23, 42, 0.55) 0%, rgba(30, 41, 59, 0.75) 60%, rgba(109, 91, 147, 0.5) 100%); opacity: 0; transition: opacity 1400ms var(--ease) 500ms; }
+  :root[data-theme="night"] .final::after { opacity: 1; }
+  .final .inner { max-width: 640px; padding: 64px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .final h2 { font-size: clamp(32px, 3.8vw, 52px); }
+  :root[lang="ar"] .final h2 { font-size: clamp(28px, 3vw, 42px); }
+  .final p { margin: 0; font-size: 17px; color: rgba(255, 255, 255, 0.9); }
+  .final .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 12px; }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 1024px) {
+    .finder { grid-template-columns: 1fr 1fr 1fr; }
+    .finder .btn { grid-column: 1 / -1; min-height: 52px; }
+    .exp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 240px; }
+    .exp-grid .pcard:nth-child(6n+6) { grid-column: auto; }
+    .how .grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .hero { min-height: 700px; }
+    .hero-content { padding-bottom: 56px; }
+    .where, .scroll-cue { display: none; }
+    .moon { top: 14%; left: 16%; }
+    .finder { grid-template-columns: 1fr 1fr; }
+    .finder .field:first-child { grid-column: 1 / -1; }
+    .field { padding: 10px 14px; }
+    .field + .field::before { display: none; }
+    .field:nth-child(2), .field:nth-child(3) { border-top: 1px solid var(--line); border-radius: 0; }
+    .stepper { gap: 6px; }
+    .stepper output { min-width: 0; }
+    .about .grid { grid-template-columns: 1fr; }
+    .duo { padding-inline-start: 32px; padding-bottom: 40px; }
+    .exp-grid { grid-auto-rows: 200px; gap: 10px; }
+    .exp-grid .pcard:nth-child(6n+1) { grid-column: 1 / -1; }
+    .pcard .body { padding: 14px; }
+    .exp-grid .pcard p { display: none; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * clamp(16px, 4vw, 40px)); padding-inline: clamp(16px, 4vw, 40px); }
+    .tab { flex: 0 0 auto; }
+    .arrows { display: none; }
+    .track .pcard { flex-basis: 72vw; height: 380px; }
+    .track .pcard:nth-child(3n+2) { flex-basis: 84vw; }
+    .sheet, :root[dir="rtl"] .sheet { inset: auto 0 0 0; width: 100%; height: auto; max-height: 92vh; border-radius: 18px 18px 0 0; transform: translateY(24px); box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.35); }
+    .sheet .scroll { max-height: 92vh; }
+    .sheet .inner { padding: 20px 20px 0; }
+    .sheet .foot { padding: 14px 20px 18px; }
+    .sheet .facts { grid-template-columns: 1fr 1fr; }
+    .sheet .facts div:last-child { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body data-title="title.home">
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="logo" href="index.html" aria-label="رحلتنا Rihlatna">
+      <svg class="mark" viewBox="0 0 26 30" aria-hidden="true"><path d="M2.5 29V12.5a10.5 10.5 0 0 1 21 0V29" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M13 14.5l4.2 7.5H8.8z" fill="#D6A756"/></svg>
+      <span class="word">رحلتنا</span><span class="latin">Rihlatna</span>
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="#places" data-i18n="nav.places"></a>
+      <a href="#experiences" data-i18n="nav.experiences"></a>
+      <a href="#how" data-i18n="nav.how"></a>
+      <a href="trips.html" data-i18n="nav.trips"></a>
+    </nav>
+    <div class="tools">
+      <button class="lang-switch" type="button">EN</button>
+      <button class="sky-switch" type="button"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="orb"></span></button>
+      <a class="btn small light" href="book.html" data-i18n="nav.signin"></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="scene" aria-hidden="true">
+      <div class="sky-day"></div>
+      <div class="sky-dusk"></div>
+      <div class="sky-night"></div>
+      <div class="sunlight"></div>
+      <div class="stars" id="stars"></div>
+      <div class="moon"></div>
+      <div class="glow-day"></div>
+      <div class="glow-night"></div>
+      <img class="land land-day" src="img/land-day-1920.webp" srcset="img/land-day-1080.webp 1080w, img/land-day-1920.webp 1920w" sizes="100vw" alt="" width="1920" height="1280" fetchpriority="high">
+      <img class="land land-night" src="img/land-night-1920.webp" srcset="img/land-night-1080.webp 1080w, img/land-night-1920.webp 1920w" sizes="100vw" alt="" width="1920" height="1280" loading="lazy">
+    </div>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <div class="hero-content wrap">
+      <div class="hero-top rise">
+        <div class="hero-text">
+          <span class="label" data-i18n="hero.eyebrow"></span>
+          <h1 class="display"><span data-i18n="hero.title1"></span><span data-i18n="hero.title2"></span></h1>
+          <p class="hero-sub" data-i18n="hero.sub"></p>
+        </div>
+        <div class="where">
+          <span class="when-day" data-i18n="hero.day"></span>
+          <span class="when-night" data-i18n="hero.night"></span>
+          <span data-i18n="hero.place"></span>
+        </div>
+      </div>
+
+      <form class="finder rise" action="book.html" id="finder">
+        <label class="field"><span class="lbl" data-i18n="find.place"></span><select name="place" id="f-place"></select></label>
+        <label class="field"><span class="lbl" data-i18n="find.date"></span><select name="date" id="f-date"></select></label>
+        <div class="field" role="group" aria-labelledby="f-group-lbl">
+          <span class="lbl" id="f-group-lbl" data-i18n="find.group"></span>
+          <div class="stepper">
+            <button type="button" id="f-less" data-i18n-aria="find.less">−</button>
+            <output id="f-party" aria-live="polite"></output>
+            <button type="button" id="f-more" data-i18n-aria="find.more">+</button>
+          </div>
+        </div>
+        <button class="btn" type="submit"><span data-i18n="find.go"></span><svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+    </div>
+
+    <a class="scroll-cue" href="#about"><span data-i18n="hero.scroll"></span><span class="rail"></span></a>
+
+    <div class="dunes" aria-hidden="true">
+      <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path d="M0 40 C 240 18, 460 14, 700 32 S 1140 56, 1440 26 L1440 64 L0 64 Z"/></svg>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section about" id="about">
+    <div class="wrap grid">
+      <div class="reveal">
+        <span class="label" data-i18n="discover.label"></span>
+        <h2 class="display h2" data-i18n="discover.title"></h2>
+        <p class="body" data-i18n="discover.body"></p>
+        <ul class="points">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="discover.p1"></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="discover.p2"></span></li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="discover.p3"></span></li>
+        </ul>
+        <a class="text-link" href="#places"><span data-i18n="discover.cta"></span><svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <figure class="duo" style="margin: 0;">
+        <img class="main" src="img/turaif.webp" alt="" width="900" height="675" loading="lazy" id="duo-main">
+        <img class="second" src="img/rijal.webp" alt="" width="900" height="675" loading="lazy" id="duo-second">
+        <figcaption id="duo-cap"></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Experiences: pick a mood, it filters the destinations below -->
+  <section class="section experiences" id="experiences">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div>
+          <span class="label" data-i18n="exp.label"></span>
+          <h2 class="display h2" data-i18n="exp.title"></h2>
+        </div>
+      </div>
+      <div class="exp-grid" id="exp-grid"></div>
+    </div>
+  </section>
+
+  <!-- Destinations: filter tabs + carousel; a card opens the details panel -->
+  <section class="section" id="places">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div>
+          <span class="label" data-i18n="places.label"></span>
+          <h2 class="display h2" data-i18n="places.title"></h2>
+        </div>
+        <p data-i18n="places.sub"></p>
+      </div>
+      <div class="dest-tools reveal">
+        <div class="tabs" id="tabs" role="toolbar"></div>
+        <div class="arrows">
+          <button type="button" id="prev" data-i18n-aria="places.prev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+          <button type="button" id="next" data-i18n-aria="places.next"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="track" id="track"></div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section how alt" id="how">
+    <div class="wrap grid">
+      <div class="intro reveal">
+        <span class="label" data-i18n="how.label"></span>
+        <h2 class="display h2" data-i18n="how.title"></h2>
+        <p data-i18n="how.sub"></p>
+        <a class="btn" href="book.html"><span data-i18n="how.cta"></span><svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <ol class="timeline" id="timeline">
+        <li class="tstep reveal" style="--delay: 0ms;"><span class="dot">1</span><div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span data-i18n="how.1"></span></h3><p data-i18n="how.1d"></p></div></li>
+        <li class="tstep reveal" style="--delay: 150ms;"><span class="dot">2</span><div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="how.2"></span></h3><p data-i18n="how.2d"></p></div></li>
+        <li class="tstep reveal" style="--delay: 300ms;"><span class="dot">3</span><div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20l6-12 4 7 3-4 5 9z"/></svg><span data-i18n="how.3"></span></h3><p data-i18n="how.3d"></p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Final call to action -->
+  <section class="final">
+    <img src="img/edge.webp" alt="" width="900" height="601" loading="lazy" id="final-img">
+    <div class="inner reveal">
+      <h2 class="display" data-i18n="cta.title"></h2>
+      <p data-i18n="cta.sub"></p>
+      <div class="actions">
+        <a class="btn" href="book.html"><span data-i18n="cta.go"></span><svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn ghost" href="#places" data-i18n="cta.browse"></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <div class="scroll">
+    <div class="photo">
+      <img id="sheet-img" src="" alt="" width="900" height="600">
+      <button class="close" type="button" id="sheet-close" data-i18n-aria="detail.close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="inner">
+      <div class="meta"><span class="chip" id="sheet-region"></span><span class="chip" id="sheet-len"></span></div>
+      <h2 class="display" id="sheet-title"></h2>
+      <p class="desc" id="sheet-desc"></p>
+      <div>
+        <h4 data-i18n="detail.why"></h4>
+        <ul id="sheet-why"></ul>
+      </div>
+      <div class="facts">
+        <div><span data-i18n="detail.length"></span><b id="sheet-f-len"></b></div>
+        <div><span data-i18n="detail.best"></span><b id="sheet-f-best"></b></div>
+        <div><span data-i18n="detail.vibe"></span><b id="sheet-f-vibe"></b></div>
+      </div>
+      <p class="note" data-i18n="detail.private"></p>
+    </div>
+    <div class="foot">
+      <a class="btn" id="sheet-book" href="book.html"><span data-i18n="detail.cta"></span><svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+</dialog>
+
+<footer class="site-footer">
+  <svg class="ridge" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path fill="currentColor" d="M0 60 L0 44 C 160 30, 260 14, 380 22 S 600 50, 760 36 S 1040 6, 1200 18 S 1380 40, 1440 34 L1440 60 Z"/></svg>
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <a class="logo" href="index.html" aria-label="رحلتنا Rihlatna">
+          <svg class="mark" viewBox="0 0 26 30" aria-hidden="true"><path d="M2.5 29V12.5a10.5 10.5 0 0 1 21 0V29" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M13 14.5l4.2 7.5H8.8z" fill="#D6A756"/></svg>
+          <span class="word">رحلتنا</span><span class="latin">Rihlatna</span>
+        </a>
+        <p class="muted" style="max-width: 340px; margin: 16px 0 0;" data-i18n="foot.about"></p>
+      </div>
+      <div>
+        <h4 data-i18n="foot.explore"></h4>
+        <ul>
+          <li><a href="#places" data-i18n="nav.places"></a></li>
+          <li><a href="#experiences" data-i18n="nav.experiences"></a></li>
+          <li><a href="#how" data-i18n="nav.how"></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="foot.account"></h4>
+        <ul>
+          <li><a href="book.html" data-i18n="nav.book"></a></li>
+          <li><a href="trips.html" data-i18n="nav.trips"></a></li>
+          <li><a href="book.html" data-i18n="nav.signin"></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="base">
+      <span data-i18n="foot.times"></span>
+      <span data-i18n="foot.photos"></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var PLACES = window.RIHLATNA_PLACES;
+  var EXPS = window.RIHLATNA_EXPERIENCES;
+  var arrowSvg = '<svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  var party = 4;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function arrow() {
+    var tpl = document.createElement('template');
+    tpl.innerHTML = arrowSvg;
+    return tpl.content.firstChild;
+  }
+  function place(id) { return PLACES.filter(function (p) { return p.id === id; })[0]; }
+
+  // Stars: a fixed scatter so the night sky looks the same on every visit.
+  function makeStars() {
+    var box = document.getElementById('stars');
+    var seed = 11;
+    var rnd = function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    var count = window.innerWidth < 760 ? 46 : 90;
+    for (var i = 0; i < count; i++) {
+      var s = el('span', 'star' + (rnd() < 0.3 ? ' tw' : ''));
+      var size = rnd() < 0.85 ? 1 + rnd() : 2 + rnd() * 0.8;
+      s.style.left = (rnd() * 100).toFixed(2) + '%';
+      s.style.top = (Math.pow(rnd(), 1.4) * 100).toFixed(2) + '%';
+      s.style.width = s.style.height = size.toFixed(1) + 'px';
+      s.style.setProperty('--o', (0.35 + rnd() * 0.65).toFixed(2));
+      s.style.setProperty('--d', (1200 + rnd() * 1300).toFixed(0) + 'ms');
+      s.style.setProperty('--t', (3 + rnd() * 4).toFixed(1) + 's');
+      s.style.setProperty('--td', (rnd() * 4).toFixed(1) + 's');
+      box.appendChild(s);
+    }
+  }
+
+  var filter = 'all';
+  var reduced = window.prefersReducedMotion;
+
+  // Images fade in once loaded instead of popping in.
+  function fadeImg(img) {
+    img.classList.add('fade');
+    if (img.complete && img.naturalWidth) img.classList.add('loaded');
+    else img.addEventListener('load', function () { img.classList.add('loaded'); }, { once: true });
+  }
+
+  function photoCard(tag, src, alt) {
+    var c = el(tag, 'pcard');
+    var img = el('img');
+    img.src = src; img.alt = alt; img.loading = 'lazy'; img.width = 900; img.height = 600;
+    fadeImg(img);
+    c.appendChild(img);
+    return c;
+  }
+
+  function renderExperiences() {
+    var grid = document.getElementById('exp-grid');
+    grid.textContent = '';
+    EXPS.forEach(function (x, i) {
+      var count = PLACES.filter(function (p) { return p.exp.indexOf(x.id) !== -1; }).length;
+      var a = photoCard('a', x.img, '');
+      a.href = '#places';
+      a.classList.add('reveal');
+      a.style.setProperty('--delay', (i * 60) + 'ms');
+      a.appendChild(el('span', 'count', count + ' ' + window.t('exp.count')));
+      var body = el('div', 'body');
+      body.appendChild(el('h3', '', window.t('exp.' + x.id)));
+      body.appendChild(el('p', '', window.t('exp.' + x.id + 'd')));
+      a.appendChild(body);
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        setFilter(x.id);
+        document.getElementById('places').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+      });
+      grid.appendChild(a);
+      window.observeReveal(a);
+    });
+  }
+
+  function renderTabs() {
+    var tabs = document.getElementById('tabs');
+    tabs.textContent = '';
+    [{ id: 'all' }].concat(EXPS).forEach(function (x) {
+      var count = x.id === 'all' ? PLACES.length : PLACES.filter(function (p) { return p.exp.indexOf(x.id) !== -1; }).length;
+      if (!count) return;
+      var b = el('button', 'tab', window.t(x.id === 'all' ? 'places.all' : 'exp.' + x.id));
+      b.type = 'button';
+      b.setAttribute('aria-pressed', x.id === filter ? 'true' : 'false');
+      b.appendChild(el('small', 'num', String(count)));
+      b.addEventListener('click', function () { setFilter(x.id); });
+      tabs.appendChild(b);
+    });
+  }
+
+  function renderTrack() {
+    var lang = window.currentLang();
+    var track = document.getElementById('track');
+    track.textContent = '';
+    var list = PLACES.filter(function (p) { return filter === 'all' || p.exp.indexOf(filter) !== -1; });
+    list.forEach(function (p, i) {
+      var L = p[lang];
+      var a = photoCard('a', p.img, L.name + ' · ' + L.region);
+      a.href = '#' + p.id;
+      a.setAttribute('aria-haspopup', 'dialog');
+      if (!reduced) {
+        a.classList.add('enter');
+        a.style.transitionDelay = Math.min(i, 6) * 50 + 'ms';
+      }
+      var body = el('div', 'body');
+      var meta = el('div', 'meta');
+      meta.appendChild(el('span', '', L.region));
+      meta.appendChild(el('i'));
+      meta.appendChild(el('span', '', window.tHours(p.len)));
+      body.appendChild(meta);
+      body.appendChild(el('h3', '', L.name));
+      body.appendChild(el('p', '', L.line));
+      var go = el('span', 'go', window.t('places.details'));
+      go.appendChild(arrow());
+      body.appendChild(go);
+      a.appendChild(body);
+      a.addEventListener('click', function (e) { e.preventDefault(); openSheet(p); });
+      track.appendChild(a);
+    });
+    track.scrollLeft = 0;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        track.querySelectorAll('.enter').forEach(function (c) { c.classList.remove('enter'); });
+      });
+    });
+    updateArrows();
+  }
+
+  function setFilter(id) {
+    filter = id;
+    renderTabs();
+    renderTrack();
+  }
+
+  // Carousel arrows. In RTL the scroll position runs negative, so work with its size.
+  var track = document.getElementById('track');
+  function step(dir) {
+    var rtl = document.documentElement.dir === 'rtl';
+    var amount = track.clientWidth * 0.8 * dir;
+    track.scrollBy({ left: rtl ? -amount : amount, behavior: reduced ? 'auto' : 'smooth' });
+  }
+  function updateArrows() {
+    var pos = Math.abs(track.scrollLeft);
+    var max = track.scrollWidth - track.clientWidth;
+    document.getElementById('prev').disabled = pos < 4;
+    document.getElementById('next').disabled = pos > max - 4;
+  }
+  document.getElementById('prev').addEventListener('click', function () { step(-1); });
+  document.getElementById('next').addEventListener('click', function () { step(1); });
+  track.addEventListener('scroll', function () { requestAnimationFrame(updateArrows); }, { passive: true });
+  window.addEventListener('resize', updateArrows, { passive: true });
+
+  // Destination details panel.
+  var sheet = document.getElementById('sheet');
+  var current = null;
+  var check = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+  function fillSheet() {
+    if (!current) return;
+    var lang = window.currentLang();
+    var L = current[lang];
+    var img = document.getElementById('sheet-img');
+    img.src = current.img; img.alt = L.name + ' · ' + L.region;
+    document.getElementById('sheet-region').textContent = L.region;
+    document.getElementById('sheet-len').textContent = window.tHours(current.len);
+    document.getElementById('sheet-title').textContent = L.name;
+    document.getElementById('sheet-desc').textContent = L.desc;
+    var ul = document.getElementById('sheet-why');
+    ul.textContent = '';
+    L.why.forEach(function (w) {
+      var li = el('li');
+      var tpl = document.createElement('template');
+      tpl.innerHTML = check;
+      li.appendChild(tpl.content.firstChild);
+      li.appendChild(el('span', '', w));
+      ul.appendChild(li);
+    });
+    document.getElementById('sheet-f-len').textContent = window.tHours(current.len);
+    document.getElementById('sheet-f-best').textContent = L.best;
+    document.getElementById('sheet-f-vibe').textContent = L.vibe;
+    document.getElementById('sheet-book').href = 'book.html?place=' + current.id;
+  }
+  function openSheet(p) {
+    current = p;
+    fillSheet();
+    sheet.querySelector('.scroll').scrollTop = 0;
+    sheet.showModal();
+    requestAnimationFrame(function () { requestAnimationFrame(function () { sheet.classList.add('show'); }); });
+    history.replaceState(null, '', '#' + p.id);
+  }
+  function closeSheet() {
+    sheet.classList.remove('show');
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(function () { if (sheet.open) sheet.close(); }, reduced ? 0 : 320);
+  }
+  document.getElementById('sheet-close').addEventListener('click', closeSheet);
+  sheet.addEventListener('cancel', function (e) { e.preventDefault(); closeSheet(); });
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
+
+  function renderFinder() {
+    var lang = window.currentLang();
+    var fp = document.getElementById('f-place');
+    var keep = fp.value;
+    fp.textContent = '';
+    PLACES.forEach(function (p) {
+      var o = el('option', '', p[lang].name + ' · ' + p[lang].region);
+      o.value = p.id; fp.appendChild(o);
+    });
+    if (keep) fp.value = keep;
+    var fd = document.getElementById('f-date');
+    var keepD = fd.value;
+    fd.textContent = '';
+    var days = window.t('days'), months = window.t('months');
+    var nums = [31, 1, 2, 3, 4, 5, 6], monthIdx = [0, 1, 1, 1, 1, 1, 1];
+    nums.forEach(function (n, i) {
+      var o = el('option', '', (i === 0 ? window.t('book.today') + ' · ' : days[i] + ' ') + n + ' ' + months[monthIdx[i]]);
+      o.value = i; fd.appendChild(o);
+    });
+    fd.value = keepD || '1';
+    updateParty();
+  }
+  function updateParty() {
+    document.getElementById('f-party').textContent = party + ' ' + window.t(party === 1 ? 'book.person' : 'book.people');
+  }
+  document.getElementById('f-less').addEventListener('click', function () { party = Math.max(1, party - 1); updateParty(); });
+  document.getElementById('f-more').addEventListener('click', function () { party = Math.min(8, party + 1); updateParty(); });
+
+  function renderImages() {
+    var lang = window.currentLang();
+    var main = place('turaif'), second = place('rijal'), edge = place('edge');
+    if (main) {
+      document.getElementById('duo-main').alt = main[lang].name;
+      document.getElementById('duo-cap').textContent = main[lang].name + ' · ' + main[lang].region;
+    }
+    if (second) document.getElementById('duo-second').alt = second[lang].name;
+    if (edge) document.getElementById('final-img').alt = edge[lang].name;
+  }
+
+  document.addEventListener('langchange', function () {
+    renderExperiences(); renderTabs(); renderTrack(); renderFinder(); renderImages(); fillSheet();
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    makeStars();
+    window.observeReveal(document.getElementById('timeline'));
+    document.querySelectorAll('.duo img').forEach(fadeImg);
+    // A shared link like index.html#hegra opens that destination.
+    var linked = place(location.hash.slice(1));
+    if (linked) openSheet(linked);
+    document.getElementById('finder').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var q = new URLSearchParams({ place: document.getElementById('f-place').value, date: document.getElementById('f-date').value, party: String(party) });
+      window.location.href = 'book.html?' + q.toString();
+    });
+    var hero = document.getElementById('hero');
+    requestAnimationFrame(function () { requestAnimationFrame(function () { hero.classList.add('is-in'); }); });
+  });
+})();
+</script>
+</body>
+</html>
