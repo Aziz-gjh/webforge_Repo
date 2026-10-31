@@ -2,7 +2,7 @@
 
 Private guided trips to Elephant Rock, AlUla Old Town, Hegra and Harrat Viewpoint. One Provider manages one Schedule shared across all Sites. Customers book their own group; Party Size never changes which Slots are open.
 
-**Live URL:** not deployed yet. Person 2's Firebase implementation and basic Vite skeleton are merged into `person3`. Person 3's Provider page and Reminder function are included. Person 1's Customer screens and app routing are still pending; the current app entry shows the Vite starter.
+**Live URL:** not deployed yet. The integration branch `two+3` includes Person 2's Firebase implementation, Person 3's Provider page and Reminder function, and Person 1's HTML design mockups. The Customer React screens and app routing are still pending; the current app entry shows the Vite starter.
 
 ## Stack and ownership
 
@@ -19,6 +19,10 @@ Vite, React, TypeScript, React Router, Tailwind CSS, Firebase Google sign-in and
 ![System diagram](docs/system-diagram.png)
 
 The [editable Excalidraw diagram](docs/system-diagram.excalidraw) shows the agreed architecture. The Customer screens and app routing from Person 1 are still being built.
+
+Person 1's Rihlatna design reference is in `design/`: Home, Book and My trips mockups with Arabic/English text, theme controls and 17 WebP images. With `npm run dev` running, open `/design/index.html` to view them. They use hard-coded example data and still need to be connected to the shared Firebase functions in React.
+
+For the Provider interface, open `/provider-preview.html` on the dev server. It uses the same view as the real Provider page with labelled sample data. Filters, details, cancellation, completion and Reset samples work in memory. This preview does not import Firebase or require sign-in/configuration. The real `ProviderSchedule` wrapper continues to use Firebase authentication and Booking operations.
 
 Slots are calculated from Operating Hours and the Booking Window. A Booking claims one Firestore `slotLocks` record per hour in a transaction. Locks can be created but never overwritten, preventing overlaps across every Site. Rescheduling preserves shared hours and swaps the remaining locks atomically; cancellation releases locks in the same batch as its status change. Person 2's implementation and [access-test evidence](docs/evidence/access-tests.md) are included.
 
@@ -52,7 +56,7 @@ Vite currently serves the starter page until Person 1's screens and routes arriv
 
 ## Verification
 
-All **38 tests pass in the merged checkout**: Person 2's 11 scheduling tests and Person 3's 27 Reminder/Provider tests. The production build and a separate strict server/test type check also pass with React 18, TypeScript 5.6 and Vitest 2. See [integration evidence](docs/evidence/part2-person3-integration.md). Provider tests mock data responses; live Google sign-in, Provider writes and email delivery remain pending.
+All **40 tests pass in the merged checkout**: 11 scheduling, 17 Reminder, 10 Provider and 2 Provider-preview tests. The app and separate Provider preview builds pass with the retained React 18, TypeScript 5.6 and Vitest 2 setup. See [preview verification](docs/evidence/preview-verification.md), [all-three integration evidence](docs/evidence/all-three-integration.md) and the earlier [Part 2 integration evidence](docs/evidence/part2-person3-integration.md). Provider tests mock data responses; live Google sign-in, Provider writes and email delivery remain pending.
 
 The earlier [isolated verification](docs/evidence/part3-verification.md) is retained as historical evidence.
 

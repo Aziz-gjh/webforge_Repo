@@ -1,6 +1,8 @@
 # Person 3: setup and integration
 
-Code is on `person3`, including Person 2's merged Firebase code and basic Vite skeleton. All 38 tests and the build pass in this checkout. Person 1's Customer screens and routing are pending. No live project, domain, email delivery or search verification has been claimed.
+Code is on the integration branch `two+3`, including Person 2's Firebase code, Person 3's implementation and Person 1's HTML design mockups in `design/`. All 40 tests and the app/Provider-preview builds pass. The Customer React screens and routing are still pending. No live project, domain, email delivery or search verification has been claimed.
+
+For local review, run `npm run dev` and open `/design/index.html` for the Customer mockups or `/provider-preview.html` for the interactive Provider view with labelled sample data. The Provider preview uses only in-memory records and pure scheduling helpers. Its Cancel/Completed actions never call Firebase.
 
 ## 1. Get the first website address
 
@@ -8,12 +10,14 @@ Vercel hosts the website. Start with its included `*.vercel.app` address; connec
 
 1. Sign in to [Vercel](https://vercel.com/) with access to the GitHub repository.
 2. Choose **Add New → Project**, import `Aziz-gjh/webforge_Repo`, and select **Vite**. Keep the repository root. The checked-in configuration runs `npm run build` and serves `dist/`. The package's Node engine selects 24.x; use Node 24.12 or newer locally to satisfy the merged Firebase SDK requirements. See [Vercel's Node configuration](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions).
-3. Use `main` as the production branch. Once pushed, `person3` should get a preview; merge through the team's usual review process. The current skeleton builds but shows the Vite starter until Person 1's screens and routes are integrated.
+3. Use `main` as the production branch. Once pushed, `two+3` should get a preview; merge through the team's usual review process. The current skeleton builds but shows the Vite starter until the Customer React screens and routes are implemented. The HTML mockups under `design/` can be viewed on the local dev server; they are not the production app entry.
 4. Record the actual deployed address in the README. The competition still needs a custom domain; the Vercel address is useful while DNS is being prepared.
 
 The optional Vercel integration can help operate the project after connection. It is not connected in this session.
 
 ## 2. Integrate the Provider page
+
+Person 1's pushed `person-1` branch currently supplies the visual mockups, rather than functional Customer React pages. The merged branch retains the tested React 18 / TypeScript 5.6 / Vite 5 setup, including Tailwind, Node 24 requirements and all test dependencies. Use that shared setup when converting the mockups and adding routes.
 
 Person 1 adds this to the existing routes in `src/App.tsx`:
 
@@ -87,7 +91,7 @@ The endpoint accepts GET. With configuration present it returns 401 without the 
 
 ## Remaining delivery checks
 
-- [x] Merge the basic skeleton and Firebase implementation; pass all 38 tests and the build.
+- [x] Merge the shared work; pass all 40 tests and the app/Provider-preview builds.
 - [ ] Integrate Person 1's Customer screens and wire `/provider`.
 - [ ] Set the real production address and server environment variables.
 - [ ] Deploy, verify domain/auth/email and run the production demo.
