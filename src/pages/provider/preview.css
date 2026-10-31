@@ -1,0 +1,17 @@
+body:has(.provider-preview-banner) { margin: 0; background: #101722; }
+.provider-preview-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px max(20px, calc((100vw - 1104px) / 2));
+  border-bottom: 1px solid #46505f;
+  color: #f4f0e7;
+  background: #182230;
+  font: 14px/1.6 system-ui, sans-serif;
+}
+.provider-preview-banner p { margin: 4px 0 0; color: #b8c0ca; max-width: 580px; }
+.provider-preview-banner nav { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.provider-preview-banner a { color: #e4bf7c; }
+.provider-preview-banner button { padding: 10px 14px; border: 1px solid #b8c0ca; border-radius: 6px; background: transparent; color: #f4f0e7; font: inherit; cursor: pointer; }
+.provider-preview-banner :focus-visible { outline: 3px solid #e4bf7c; outline-offset: 4px; }

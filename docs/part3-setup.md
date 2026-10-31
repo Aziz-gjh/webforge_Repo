@@ -1,6 +1,8 @@
 # Person 3: setup and integration
 
-Code is on the integration branch `two+3`, including Person 2's Firebase code, Person 3's implementation and Person 1's HTML design mockups in `design/`. All 38 tests and the build pass. The Customer React screens and routing are still pending. No live project, domain, email delivery or search verification has been claimed.
+Code is on the integration branch `two+3`, including Person 2's Firebase code, Person 3's implementation and Person 1's HTML design mockups in `design/`. All 40 tests and the app/Provider-preview builds pass. The Customer React screens and routing are still pending. No live project, domain, email delivery or search verification has been claimed.
+
+For local review, run `npm run dev` and open `/design/index.html` for the Customer mockups or `/provider-preview.html` for the interactive Provider view with labelled sample data. The Provider preview uses only in-memory records and pure scheduling helpers. Its Cancel/Completed actions never call Firebase.
 
 ## 1. Get the first website address
 
@@ -89,7 +91,7 @@ The endpoint accepts GET. With configuration present it returns 401 without the 
 
 ## Remaining delivery checks
 
-- [x] Merge the basic skeleton and Firebase implementation; pass all 38 tests and the build.
+- [x] Merge the shared work; pass all 40 tests and the app/Provider-preview builds.
 - [ ] Integrate Person 1's Customer screens and wire `/provider`.
 - [ ] Set the real production address and server environment variables.
 - [ ] Deploy, verify domain/auth/email and run the production demo.
