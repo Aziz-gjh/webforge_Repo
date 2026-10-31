@@ -25,5 +25,10 @@ dist-ssr
 
 .env.local
 .env*.local
+.env
+.env.*
+!.env.example
+.omc/
+.vercel
 .firebase/
 *-debug.log
