@@ -1,27 +1,15 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { riyadhToday } from '../../lib/schedule';
+import type { Lang } from '../../content';
 import type { Booking, BookingStatus } from '../../types';
+import { providerCopy, providerDateFormatters, providerSiteName, providerText, type ProviderTextKey } from './providerI18n';
 import './provider.css';
 
-const statusLabels: Record<BookingStatus, string> = {
-  confirmed: 'Confirmed', cancelled: 'Cancelled', completed: 'Completed',
-};
-
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'Asia/Riyadh', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-});
-const timestampFormatter = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'Asia/Riyadh', day: 'numeric', month: 'short', year: 'numeric',
-  hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-});
+const statuses: BookingStatus[] = ['confirmed', 'cancelled', 'completed'];
 
 function timeRange(booking: Booking): string {
   const hour = (value: number) => `${String(value).padStart(2, '0')}:00`;
   return `${hour(booking.startHour)}–${hour(booking.startHour + booking.tripLength)}`;
-}
-
-function timestamp(value: Date): string {
-  return Number.isFinite(value.getTime()) ? timestampFormatter.format(value) : 'Unavailable';
 }
 
 function validDate(value: string): boolean {
@@ -30,21 +18,24 @@ function validDate(value: string): boolean {
     parsed.toISOString().slice(0, 10) === value;
 }
 
-function errorMessage(error: unknown): string {
+function errorMessageKey(error: unknown): ProviderTextKey {
   const code = error && typeof error === 'object' && 'code' in error ? error.code : null;
-  if (code === 'permission-denied') return 'Your Provider access could not be verified. Sign in again.';
-  if (code === 'network') return 'Connection lost. Check your connection and try again.';
-  if (code === 'too-late') return 'This Booking can no longer be changed.';
-  return 'The request could not be completed. Try again.';
+  if (code === 'permission-denied') return 'permissionError';
+  if (code === 'network') return 'networkError';
+  if (code === 'too-late') return 'tooLateError';
+  return 'requestError';
 }
 
-function CancelDialog({ booking, pending, error, onClose, onConfirm }: {
+function CancelDialog({ booking, pending, error, lang, onClose, onConfirm }: {
   booking: Booking;
   pending: boolean;
   error: string | null;
+  lang: Lang;
   onClose(): void;
   onConfirm(): void;
 }) {
+  const copy = providerCopy[lang];
+  const formatters = useMemo(() => providerDateFormatters(lang), [lang]);
   const dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId();
   const descriptionId = useId();
@@ -60,14 +51,14 @@ function CancelDialog({ booking, pending, error, onClose, onConfirm }: {
         if (pending) event.preventDefault();
         else onClose();
       }}>
-      <h2 id={headingId}>Cancel this Booking?</h2>
-      <p id={descriptionId}>{booking.siteName} · {dateFormatter.format(booking.startAt)} · {timeRange(booking)}.
-        {' '}The Slots will become open for other Customers.</p>
+      <h2 id={headingId}>{copy.cancelTitle}</h2>
+      <p id={descriptionId}>{providerSiteName(booking.siteId, booking.siteName, lang)} · {formatters.date.format(booking.startAt)} · <bdi dir="ltr">{timeRange(booking)}</bdi>.
+        {' '}{copy.cancelDescription}</p>
       {error && <p role="alert" className="provider-error">{error}</p>}
       <div className="provider-actions">
-        <button type="button" className="provider-button" disabled={pending} onClick={onClose} autoFocus>Keep Booking</button>
+        <button type="button" className="provider-button" disabled={pending} onClick={onClose} autoFocus>{copy.keepBooking}</button>
         <button type="button" className="provider-button provider-button-danger" disabled={pending} onClick={onConfirm}>
-          {pending ? 'Cancelling…' : 'Cancel Booking'}
+          {pending ? copy.cancelling : copy.cancelBooking}
         </button>
       </div>
     </dialog>
@@ -78,7 +69,7 @@ interface BookingList {
   key: string;
   status: 'loading' | 'ready' | 'error';
   bookings: Booking[];
-  error?: string;
+  error?: ProviderTextKey;
 }
 
 export interface ProviderScheduleData {
@@ -94,11 +85,16 @@ export interface ProviderScheduleViewProps {
   providerLoading: boolean;
   data: ProviderScheduleData;
   sample?: boolean;
+  lang?: Lang;
 }
 
 export default function ProviderScheduleView({
-  user, authLoading, isProvider, providerLoading, data, sample = false,
+  user, authLoading, isProvider, providerLoading, data, sample = false, lang = 'en',
 }: ProviderScheduleViewProps) {
+  const copy = providerCopy[lang];
+  const formatters = useMemo(() => providerDateFormatters(lang), [lang]);
+  const siteName = (booking: Booking) => providerSiteName(booking.siteId, booking.siteName, lang);
+  const timestamp = (value: Date) => Number.isFinite(value.getTime()) ? formatters.timestamp.format(value) : copy.unavailable;
   const { watchBookingsForDate, cancelBooking, markCompleted } = data;
   const [date, setDate] = useState(() => riyadhToday());
   const [siteId, setSiteId] = useState('all');
@@ -109,7 +105,7 @@ export default function ProviderScheduleView({
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const pendingRef = useRef(false);
-  const [feedback, setFeedback] = useState<{ key: string; text: string; error: boolean } | null>(null);
+  const [feedback, setFeedback] = useState<{ key: string; message: ProviderTextKey; error: boolean } | null>(null);
   const key = `${user?.uid ?? ''}:${date}`;
   const canRead = !authLoading && !providerLoading && !!user && isProvider && validDate(date);
 
@@ -120,7 +116,7 @@ export default function ProviderScheduleView({
     // The shared watch contract has no error callback. Bound the initial wait
     // so a denied or unavailable subscription does not leave a permanent spinner.
     const timeout = window.setTimeout(() => {
-      if (active) setList({ key, status: 'error', bookings: [], error: 'The Schedule did not load. Check your connection and Provider access, then retry.' });
+      if (active) setList({ key, status: 'error', bookings: [], error: 'loadError' });
     }, 12_000);
     let unsubscribe: (() => void) | undefined;
     try {
@@ -131,7 +127,7 @@ export default function ProviderScheduleView({
       });
     } catch (error) {
       window.clearTimeout(timeout);
-      setList({ key, status: 'error', bookings: [], error: errorMessage(error) });
+      setList({ key, status: 'error', bookings: [], error: errorMessageKey(error) });
     }
     return () => {
       active = false;
@@ -141,20 +137,20 @@ export default function ProviderScheduleView({
   }, [canRead, date, key, retry, watchBookingsForDate]);
 
   if (authLoading || providerLoading) {
-    return <main className="provider-page"><p role="status">Checking Provider access…</p></main>;
+    return <main className="provider-page" lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'}><p role="status">{copy.checkingAccess}</p></main>;
   }
   if (!user || !isProvider) {
-    return <main className="provider-page"><h1>Not authorised</h1>
-      <p>The Provider Schedule is available to the Provider account.</p>
-      {!user && <a className="provider-button" href="/signin">Sign in with Google</a>}
+    return <main className="provider-page" lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'}><h1>{copy.notAuthorised}</h1>
+      <p>{copy.accessDescription}</p>
+      {!user && <a className="provider-button" href="/signin">{copy.signIn}</a>}
     </main>;
   }
 
   // Never display a previous Customer's or date's records while a new listener starts.
   const current = list.key === key ? list : { status: 'loading', bookings: [] };
   const bookings = current.bookings;
-  const sites = [...new Map(bookings.map((booking) => [booking.siteId, booking.siteName])).entries()]
-    .sort((a, b) => a[1].localeCompare(b[1]));
+  const sites = [...new Map(bookings.map((booking) => [booking.siteId, siteName(booking)])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], lang));
   const visible = bookings.filter((booking) => (siteId === 'all' || booking.siteId === siteId) &&
     (status === 'all' || booking.status === status));
   const selected = visible.find((booking) => booking.id === selectedId);
@@ -174,10 +170,10 @@ export default function ProviderScheduleView({
         ...previous,
         bookings: previous.bookings.map((item) => item.id === booking.id ? { ...item, status: action } : item),
       } : previous);
-      setFeedback({ key, text: action === 'cancelled' ? 'Booking cancelled. Its Slots are open again.' : 'Booking marked Completed.', error: false });
+      setFeedback({ key, message: action === 'cancelled' ? 'cancelSuccess' : 'completedSuccess', error: false });
       setCancelId(null);
     } catch (error) {
-      setFeedback({ key, text: errorMessage(error), error: true });
+      setFeedback({ key, message: errorMessageKey(error), error: true });
     } finally {
       pendingRef.current = false;
       setPending(null);
@@ -185,81 +181,81 @@ export default function ProviderScheduleView({
   }
 
   return (
-    <main className="provider-page" aria-labelledby="provider-heading">
+    <main className="provider-page" lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} aria-labelledby="provider-heading">
       <header className="provider-heading">
-        <div><p className="provider-eyebrow">PROVIDER // SCHEDULE</p><h1 id="provider-heading">Your day, at a glance.</h1>
-          <p className="provider-muted">Every Site. One Schedule. All times in Riyadh (UTC+3).</p></div>
-        <span className="provider-live">{current.status === 'ready' ? (sample ? 'Sample Schedule' : 'Live Schedule') : current.status === 'error' ? 'Connection unavailable' : 'Connecting…'}</span>
+        <div><p className="provider-eyebrow">{copy.eyebrow}</p><h1 id="provider-heading">{copy.title}</h1>
+          <p className="provider-muted">{copy.subtitle} <bdi dir="ltr">(UTC+3)</bdi>.</p></div>
+        <span className="provider-live">{current.status === 'ready' ? (sample ? copy.sample : copy.live) : current.status === 'error' ? copy.connectionUnavailable : copy.connecting}</span>
       </header>
 
-      <section className="provider-filters" aria-label="Schedule filters">
-        <label>Date<input type="date" value={date} disabled={!!pending} onChange={(event) => {
+      <section className="provider-filters" aria-label={copy.filters}>
+        <label>{copy.date}<input type="date" dir="ltr" value={date} disabled={!!pending} onChange={(event) => {
           setDate(event.target.value); setSelectedId(null); setCancelId(null); setSiteId('all'); setFeedback(null);
         }} /></label>
-        <label>Site<select value={siteId} disabled={!!pending} onChange={(event) => setSiteId(event.target.value)}>
-          <option value="all">All Sites</option>
+        <label>{copy.site}<select value={siteId} disabled={!!pending} onChange={(event) => setSiteId(event.target.value)}>
+          <option value="all">{copy.allSites}</option>
           {sites.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select></label>
-        <label>Booking Status<select value={status} disabled={!!pending}
+        <label>{copy.bookingStatus}<select value={status} disabled={!!pending}
           onChange={(event) => setStatus(event.target.value as BookingStatus | 'all')}>
-          <option value="all">All statuses</option>
-          {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          <option value="all">{copy.allStatuses}</option>
+          {statuses.map((value) => <option key={value} value={value}>{copy[value]}</option>)}
         </select></label>
       </section>
 
       <div aria-live="polite" aria-atomic="true">
-        {message && !message.error && <p className="provider-success" role="status">{message.text}</p>}
+        {message && !message.error && <p className="provider-success" role="status">{copy[message.message]}</p>}
       </div>
-      {message?.error && !cancelTarget && <p className="provider-error" role="alert">{message.text}</p>}
+      {message?.error && !cancelTarget && <p className="provider-error" role="alert">{copy[message.message]}</p>}
 
-      {!validDate(date) ? <p role="alert" className="provider-error">Choose a valid date to view the Schedule.</p>
-        : current.status === 'loading' ? <p role="status" className="provider-state">Loading the Schedule…</p>
+      {!validDate(date) ? <p role="alert" className="provider-error">{copy.invalidDate}</p>
+        : current.status === 'loading' ? <p role="status" className="provider-state">{copy.loading}</p>
           : current.status === 'error' ? <div className="provider-state provider-error" role="alert">
-            <p>{'error' in current ? current.error : 'The Schedule could not be loaded.'}</p>
-            <button type="button" className="provider-button" onClick={() => setRetry((value) => value + 1)}>Retry</button>
+            <p>{copy[('error' in current && current.error) || 'loadError']}</p>
+            <button type="button" className="provider-button" onClick={() => setRetry((value) => value + 1)}>{copy.retry}</button>
           </div>
             : <>
-              <p className="provider-count" aria-live="polite">{visible.length} {visible.length === 1 ? 'Booking' : 'Bookings'}</p>
+              <p className="provider-count" aria-live="polite">{providerText(lang, visible.length === 1 ? 'bookingOne' : 'bookingMany', { count: visible.length })}</p>
               {visible.length === 0 ? <div className="provider-state">
-                <h2>{bookings.length === 0 ? 'No Bookings on this day.' : 'No Bookings match these filters.'}</h2>
-                <p className="provider-muted">{bookings.length === 0 ? 'Choose another date to view the Schedule.' : 'Choose another Site or Booking Status.'}</p>
-              </div> : <ul className="provider-bookings" aria-label="Bookings">
+                <h2>{bookings.length === 0 ? copy.emptyDay : copy.emptyFilters}</h2>
+                <p className="provider-muted">{bookings.length === 0 ? copy.chooseDate : copy.chooseFilters}</p>
+              </div> : <ul className="provider-bookings" aria-label={copy.bookings}>
                 {visible.map((booking) => <li key={booking.id} className="provider-booking">
-                  <div className="provider-booking-time"><strong>{timeRange(booking)}</strong><span>{booking.tripLength} h · Party Size {booking.partySize}</span></div>
-                  <div className="provider-booking-customer"><h2>{booking.siteName}</h2><p>{booking.customerName}</p><p><a href={`mailto:${booking.customerEmail}`}>{booking.customerEmail}</a></p></div>
-                  <span className={`provider-status provider-status-${booking.status}`}>{statusLabels[booking.status]}</span>
+                  <div className="provider-booking-time"><strong><bdi dir="ltr">{timeRange(booking)}</bdi></strong><span><bdi dir="ltr">{booking.tripLength}</bdi> {copy.hourUnit} · {copy.partySize} <bdi dir="ltr">{booking.partySize}</bdi></span></div>
+                  <div className="provider-booking-customer"><h2>{siteName(booking)}</h2><p><bdi>{booking.customerName}</bdi></p><p><a dir="ltr" href={`mailto:${booking.customerEmail}`}>{booking.customerEmail}</a></p></div>
+                  <span className={`provider-status provider-status-${booking.status}`}>{copy[booking.status]}</span>
                   <button type="button" className="provider-button" aria-expanded={selectedId === booking.id}
-                    aria-label={`${selectedId === booking.id ? 'Hide' : 'View'} details for ${booking.siteName} at ${timeRange(booking)}`}
+                    aria-label={providerText(lang, 'detailsLabel', { action: selectedId === booking.id ? copy.hideDetails : copy.viewDetails, site: siteName(booking), time: timeRange(booking) })}
                     aria-controls="provider-booking-details" onClick={() => setSelectedId(selectedId === booking.id ? null : booking.id)}>
-                    {selectedId === booking.id ? 'Hide details' : 'View details'}<span className="provider-sr-only"> for {booking.siteName} at {timeRange(booking)}</span>
+                    {selectedId === booking.id ? copy.hideDetails : copy.viewDetails}
                   </button>
                 </li>)}
               </ul>}
             </>}
 
       {selected && <section id="provider-booking-details" className="provider-details" aria-labelledby="provider-details-heading">
-        <p className="provider-eyebrow">BOOKING // DETAILS</p><h2 id="provider-details-heading">{selected.siteName}</h2>
+        <p className="provider-eyebrow">{copy.detailsEyebrow}</p><h2 id="provider-details-heading">{siteName(selected)}</h2>
         <dl>
-          <div><dt>Customer</dt><dd>{selected.customerName}</dd></div>
-          <div><dt>Email</dt><dd><a href={`mailto:${selected.customerEmail}`}>{selected.customerEmail}</a></dd></div>
-          <div><dt>Date and time</dt><dd>{dateFormatter.format(selected.startAt)} · {timeRange(selected)} (Riyadh)</dd></div>
-          <div><dt>Party Size</dt><dd>{selected.partySize}</dd></div>
-          <div><dt>Booking Status</dt><dd>{statusLabels[selected.status]}</dd></div>
-          <div><dt>Created</dt><dd>{timestamp(selected.createdAt)} (Riyadh)</dd></div>
-          <div><dt>Updated</dt><dd>{timestamp(selected.updatedAt)} (Riyadh)</dd></div>
-          <div><dt>Reminder</dt><dd>{selected.reminderSentFor === selected.slotKeys[0] ? 'Sent for the current start time' : 'Not sent for the current start time'}</dd></div>
+          <div><dt>{copy.customer}</dt><dd><bdi>{selected.customerName}</bdi></dd></div>
+          <div><dt>{copy.email}</dt><dd><a dir="ltr" href={`mailto:${selected.customerEmail}`}>{selected.customerEmail}</a></dd></div>
+          <div><dt>{copy.dateAndTime}</dt><dd>{formatters.date.format(selected.startAt)} · <bdi dir="ltr">{timeRange(selected)}</bdi> ({copy.riyadh})</dd></div>
+          <div><dt>{copy.partySize}</dt><dd><bdi dir="ltr">{selected.partySize}</bdi></dd></div>
+          <div><dt>{copy.bookingStatus}</dt><dd>{copy[selected.status]}</dd></div>
+          <div><dt>{copy.created}</dt><dd>{timestamp(selected.createdAt)} ({copy.riyadh})</dd></div>
+          <div><dt>{copy.updated}</dt><dd>{timestamp(selected.updatedAt)} ({copy.riyadh})</dd></div>
+          <div><dt>{copy.reminder}</dt><dd>{selected.reminderSentFor === selected.slotKeys[0] ? copy.reminderSent : copy.reminderNotSent}</dd></div>
         </dl>
         {selected.status === 'confirmed' && <div className="provider-actions">
           <button type="button" className="provider-button" disabled={!!pending} onClick={() => {
             setFeedback(null); setCancelId(selected.id);
-          }}>Cancel Booking</button>
+          }}>{copy.cancelBooking}</button>
           <button type="button" className="provider-button provider-button-primary" disabled={!!pending}
             onClick={() => void updateBooking(selected, 'completed')}>
-            {pending === selected.id ? 'Saving…' : 'Mark Completed'}
+            {pending === selected.id ? copy.saving : copy.markCompleted}
           </button>
         </div>}
       </section>}
-      {cancelTarget && <CancelDialog booking={cancelTarget} pending={!!pending} error={message?.error ? message.text : null}
+      {cancelTarget && <CancelDialog booking={cancelTarget} pending={!!pending} lang={lang} error={message?.error ? copy[message.message] : null}
         onClose={() => { setCancelId(null); setFeedback(null); }}
         onConfirm={() => void updateBooking(cancelTarget, 'cancelled')} />}
     </main>
