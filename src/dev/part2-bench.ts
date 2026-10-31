@@ -58,6 +58,7 @@ async function report(title: string, rows: [string, string][]) {
 
 // Two transactions race for the same free hour, then a client that skips the transaction tries to overwrite the lock.
 $('race').onclick = () => run(async () => {
+  if (!auth.currentUser) throw new Error('sign in first');
   const s = site(), d = date();
   const h = getOpenStartTimes({ date: d, tripLength: s.tripLength, settings, taken, now: new Date() })[0];
   if (h === undefined) throw new Error('no open hour on this date');
@@ -82,7 +83,8 @@ $('race').onclick = () => run(async () => {
 
 // Signed in as Customer 2: attack a Booking that belongs to someone else, found through the public locks.
 $('breakit').onclick = () => run(async () => {
-  const me = auth.currentUser!;
+  const me = auth.currentUser;
+  if (!me) throw new Error('sign in first');
   const mineIds = new Set((await getDocs(query(collection(db, 'bookings'), where('customerId', '==', me.uid)))).docs.map(d => d.id));
   const locks = await getDocs(query(collection(db, 'slotLocks'), where('date', 'in', windowDates(settings))));
   const target = locks.docs.find(l => !mineIds.has(l.data().bookingId));

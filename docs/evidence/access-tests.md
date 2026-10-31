@@ -42,17 +42,40 @@ console.table({
 
 ## Results
 
-_Not run yet._ Paste the console table here, with the date and the account used.
+**Run 1: 31 Oct 2026, 08:41 UTC.** The attacks came from the **Run break-it tests** button on `dev-part2.html`, which issues the same calls as the script above, against live production rules on project `alula-site-tours-wf26`.
+- Attacker: Customer `abdelrahmanschool06@gmail.com` (uid `PDq6sx…`).
+- Target: Booking `iRS23xWm7f9xoELbFyin`, Harrat Viewpoint, 31 Oct 13:00, owned by a second Google account (uid `RlkxFe…`).
 
-| # | Attack (as Customer 2) | Expected | Result |
+| # | Attack | Expected | Result |
 |---|---|---|---|
-| 1 | Read Customer 1's Booking by ID | permission-denied | |
-| 2 | Change its `status` | permission-denied | |
-| 3 | Overwrite an existing `slotLocks` record | permission-denied | |
-| 4 | Create a Booking with `partySize: 20` | permission-denied | |
-| 5 | List all Bookings without `customerId` filter | permission-denied | |
-| 6 | Delete Customer 1's slot lock | permission-denied | |
-| 7 | Create `providers/{myUid}` | permission-denied | |
+| 1 | Read another Customer's Booking by ID | permission-denied | refused ✅ (permission-denied) |
+| 2 | Change its `status` to cancelled | permission-denied | refused ✅ (permission-denied) |
+| 3 | Overwrite its `slotLocks` record | permission-denied | refused ✅ (permission-denied) |
+| 4 | Create a Booking with `partySize: 20` | permission-denied | refused ✅ (permission-denied) |
+| 5 | List all Bookings without a `customerId` filter | permission-denied | refused ✅ (permission-denied) |
+| 6 | Delete its slot lock | permission-denied | refused ✅ (permission-denied) |
+| 7 | Create `providers/{myUid}` | permission-denied | refused ✅ (permission-denied) |
+
+## Visitor (signed out) checks
+
+Run through the Firestore REST API with only the public API key and no sign-in, on 31 Oct 2026.
+
+| Request | Expected | HTTP |
+|---|---|---|
+| Read `sites` | allowed | 200 ✅ |
+| Read `settings/schedule` | allowed | 200 ✅ |
+| List `slotLocks` (taken hours, no customer details) | allowed | 200 ✅ |
+| List `bookings` | refused | 403 ✅ |
+| Write a Site | refused | 403 ✅ |
+| Create a `slotLocks` record | refused | 403 ✅ |
+| Create a `providers` record | refused | 403 ✅ |
+
+## Data integrity check
+
+On 31 Oct 2026, after manual testing with two accounts (10 Bookings: book, cancel, reschedule), we used admin access to dump every Booking and lock.
+- There were 17 locks. Each one pointed to exactly one Confirmed Booking, and every hour of every Confirmed Booking had its lock.
+- The cancelled Booking held no locks.
+- No two Confirmed Bookings shared an hour.
 
 ## Two-browser race
 
