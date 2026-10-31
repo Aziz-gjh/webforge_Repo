@@ -1,0 +1,60 @@
+/* Ported from design/book.html. */
+  .page-book { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; padding-bottom: 80px; }
+  .page-book .steps { flex: 999 1 620px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+  .page-book h1 { margin: 6px 0 0; font-size: clamp(28px, 3vw, 38px); line-height: 1.2; }
+  :root[lang="ar"] .page-book h1 { font-size: clamp(24px, 2.4vw, 32px); line-height: 1.4; }
+  .page-book .step { display: flex; flex-direction: column; gap: 14px; }
+  .page-book .step-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+
+  .page-book .place-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .page-book .place-pick button { position: relative; padding: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); color: var(--ink); cursor: pointer; text-align: start; font: inherit; }
+  .page-book .place-pick img { width: 100%; height: 92px; object-fit: cover; }
+  .page-book .place-pick span { display: block; padding: 10px 12px 12px; font: 600 15px var(--sans); }
+  .page-book .place-pick small { display: block; margin-top: 3px; font: 400 12px var(--mono); color: var(--muted); }
+  .page-book .place-pick button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+  .page-book .dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .page-book .chip { flex: 0 0 auto; min-width: 76px; min-height: 66px; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
+  .page-book .chip small { display: block; font: 500 11px var(--mono); color: var(--muted); }
+  .page-book .chip b { display: block; margin-top: 3px; font: 400 26px 'Instrument Serif', serif; }
+  .page-book .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .page-book .chip[aria-pressed="true"] small { color: var(--bg); opacity: 0.8; }
+
+  /* The day ruler: one cell per hour. In Arabic it reads right to left. */
+  .page-book .ruler { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
+  .page-book .slot { position: relative; min-height: 88px; border: 0; border-inline-end: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; padding: 12px 0 0; display: flex; flex-direction: column; align-items: center; font: 500 14px 'JetBrains Mono', monospace; }
+  .page-book .slot:last-child { border-inline-end: 0; }
+  .page-book .slot .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 28px; }
+  .page-book .slot.taken { cursor: not-allowed; color: var(--muted); }
+  .page-book .slot.taken .bar { background: repeating-linear-gradient(135deg, var(--muted) 0 1px, transparent 1px 7px); opacity: 0.5; border-top: 1px solid var(--line); }
+  .page-book .slot.blocked { cursor: not-allowed; color: var(--muted); opacity: 0.55; }
+  .page-book .slot.sel { background: var(--accent); color: var(--accent-ink); }
+  .page-book .slot.sel .bar { background: rgba(0,0,0,0.14); }
+  .page-book .legend { display: flex; gap: 18px; flex-wrap: wrap; }
+  .page-book .legend i { display: inline-block; width: 14px; height: 10px; margin-inline-end: 6px; vertical-align: -1px; border: 1px solid var(--line); }
+  .page-book .legend .l-sel { background: var(--accent); border-color: var(--accent); }
+  .page-book .legend .l-taken { background: repeating-linear-gradient(135deg, var(--muted) 0 1px, transparent 1px 4px); }
+
+  .page-book .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); width: fit-content; }
+  .page-book .stepper button { width: 52px; height: 52px; border: 0; background: transparent; color: var(--ink); font: 400 24px var(--sans); cursor: pointer; }
+  .page-book .stepper output { min-width: 64px; text-align: center; font: 400 30px 'Instrument Serif', serif; }
+
+  .page-book aside { flex: 1 1 320px; min-width: 0; position: sticky; top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .page-book aside img { width: 100%; height: 200px; object-fit: cover; }
+  .page-book aside .body { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .page-book aside h2 { margin: 0; font-size: 26px; line-height: 1.25; }
+  .page-book aside dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; font-size: 15px; }
+  .page-book aside dt { padding-top: 2px; }
+  .page-book aside dd { margin: 0; }
+  .page-book aside .btn { width: 100%; min-height: 52px; }
+  .page-book .done { display: none; border: 1px solid var(--ok); border-radius: 4px; padding: 14px; }
+  .page-book .done.show { display: block; }
+  .page-book .done .mono { color: var(--ok); }
+  .page-book .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: calc(100% - 32px); background: var(--ink); color: var(--bg); border-radius: 4px; padding: 12px 18px; font: 500 15px var(--sans); display: none; }
+  .page-book .toast.show { display: block; }
+
+  @media (max-width: 720px) {
+    .page-book .ruler { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .page-book .slot { border-bottom: 1px solid var(--line); min-height: 72px; }
+    .page-book aside { position: static; }
+  }

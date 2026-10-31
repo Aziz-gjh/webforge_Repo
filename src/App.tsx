@@ -1,35 +1,33 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Page } from './components/Layout';
+import { AppStateProvider } from './i18n';
+import Book from './pages/Book';
+import Home from './pages/Home';
+import SignIn from './pages/SignIn';
+import Trips from './pages/Trips';
+import ProviderSchedule from './pages/provider/ProviderSchedule';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function Provider() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Page title="nav.provider">
+      <div className="provider-wrap"><ProviderSchedule /></div>
+    </Page>
+  );
 }
 
-export default App
+export default function App() {
+  return (
+    <AppStateProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/book" element={<Book />} />
+          <Route path="/trips" element={<Trips />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/provider" element={<Provider />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </BrowserRouter>
+    </AppStateProvider>
+  );
+}
