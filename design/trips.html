@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="morning">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>رحلاتي · رحلتنا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="theme.css">
+<script src="i18n.js"></script>
+<script src="theme.js"></script>
+<style>
+  main { padding-bottom: 80px; max-width: 960px; }
+  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px; }
+  h1 { margin: 6px 0 0; font-size: clamp(28px, 3vw, 38px); line-height: 1.2; }
+  :root[lang="ar"] h1 { font-size: clamp(24px, 2.4vw, 32px); line-height: 1.4; }
+
+  .list { display: grid; gap: 12px; }
+  .trip {
+    display: grid; grid-template-columns: 112px minmax(0, 1fr) auto auto; align-items: center; gap: 20px;
+    padding: 12px; padding-inline-end: 20px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    transition: background-color var(--theme-fade) var(--ease) 500ms, border-color var(--theme-fade) var(--ease) 500ms, opacity 300ms ease-out;
+  }
+  .trip img { width: 112px; height: 84px; object-fit: cover; border-radius: 6px; }
+  .trip .info { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .trip h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; }
+  .trip .where { font-size: 13px; color: var(--muted); }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; }
+  .facts span { display: inline-flex; align-items: center; gap: 6px; }
+  .facts svg { color: var(--muted); flex: 0 0 15px; }
+  .badge { justify-self: end; font: 600 12px var(--ui); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .badge.confirmed { color: var(--ok); background: var(--ok-soft); }
+  .badge.cancelled { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+  .actions { display: flex; gap: 8px; }
+  .actions .btn { min-height: 38px; padding: 0 14px; font-size: 14px; }
+  .btn.danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.danger:hover { background: color-mix(in srgb, var(--danger) 8%, transparent); }
+  .trip.cancelled { opacity: 0.6; }
+
+  .empty { border: 1px dashed var(--line); border-radius: var(--radius); padding: 40px 24px; text-align: center; display: none; }
+  .empty.show { display: block; }
+  .empty h2 { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+  .empty p { margin: 0 0 18px; color: var(--muted); }
+
+  dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); padding: 24px; max-width: 400px; width: calc(100% - 32px); }
+  dialog::backdrop { background: rgba(15, 23, 42, 0.5); }
+  dialog h3 { margin: 0 0 6px; font-size: 19px; font-weight: 600; }
+  dialog p { margin: 0; color: var(--muted); line-height: 1.6; }
+  dialog .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  dialog .btn { min-height: 40px; font-size: 14px; }
+
+  @media (max-width: 720px) {
+    .trip { grid-template-columns: 88px minmax(0, 1fr); gap: 12px 14px; padding: 12px; }
+    .trip img { width: 88px; height: 72px; }
+    .badge { grid-column: 2; grid-row: 1; justify-self: end; align-self: start; }
+    .trip .info { grid-column: 2; grid-row: 1; padding-inline-end: 72px; }
+    .actions { grid-column: 1 / -1; }
+    .actions .btn { flex: 1 1 0; }
+  }
+</style>
+</head>
+<body data-title="title.trips">
+
+<header class="site-header" data-solid>
+  <div class="wrap bar">
+    <a class="logo" href="index.html" aria-label="رحلتنا Rihlatna">
+      <svg class="mark" viewBox="0 0 26 30" aria-hidden="true"><path d="M2.5 29V12.5a10.5 10.5 0 0 1 21 0V29" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M13 14.5l4.2 7.5H8.8z" fill="#D6A756"/></svg>
+      <span class="word">رحلتنا</span><span class="latin">Rihlatna</span>
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="index.html#places" data-i18n="nav.places"></a>
+      <a href="book.html" data-i18n="nav.book"></a>
+      <a href="trips.html" aria-current="page" data-i18n="nav.trips"></a>
+    </nav>
+    <div class="tools">
+      <button class="lang-switch" type="button">EN</button>
+      <button class="sky-switch" type="button"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="orb"></span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap page-main">
+  <div class="head">
+    <div>
+      <span class="label" data-i18n="trips.eyebrow"></span>
+      <h1 class="display" data-i18n="trips.title"></h1>
+    </div>
+    <a class="btn small" href="book.html" data-i18n="trips.another"></a>
+  </div>
+
+  <div class="list" id="list">
+    <article class="trip" data-place="hegra">
+      <img src="img/hegra.webp" alt="" width="900" height="600">
+      <div class="info">
+        <h2 data-name></h2>
+        <span class="where" data-where></span>
+        <div class="facts">
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="trip1.when"></span></span>
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="trip1.time"></span></span>
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg><span data-i18n="trip1.guests"></span></span>
+        </div>
+      </div>
+      <span class="badge confirmed" data-i18n="trips.confirmed"></span>
+      <div class="actions">
+        <a class="btn ghost" href="book.html?place=hegra" data-i18n="trips.reschedule"></a>
+        <button class="btn danger" type="button" data-cancel data-i18n="trips.cancel"></button>
+      </div>
+    </article>
+    <article class="trip" data-place="edge">
+      <img src="img/edge.webp" alt="" width="900" height="600">
+      <div class="info">
+        <h2 data-name></h2>
+        <span class="where" data-where></span>
+        <div class="facts">
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="trip2.when"></span></span>
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="trip2.time"></span></span>
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg><span data-i18n="trip2.guests"></span></span>
+        </div>
+      </div>
+      <span class="badge confirmed" data-i18n="trips.confirmed"></span>
+      <div class="actions">
+        <a class="btn ghost" href="book.html?place=edge" data-i18n="trips.reschedule"></a>
+        <button class="btn danger" type="button" data-cancel data-i18n="trips.cancel"></button>
+      </div>
+    </article>
+  </div>
+
+  <div class="empty" id="empty">
+    <h2 data-i18n="trips.empty"></h2>
+    <p data-i18n="trips.emptyd"></p>
+    <a class="btn small" href="book.html" data-i18n="trips.book"></a>
+  </div>
+</main>
+
+<dialog id="confirm-cancel">
+  <h3 data-i18n="trips.q"></h3>
+  <p data-i18n="trips.qd"></p>
+  <div class="row">
+    <button class="btn ghost" type="button" value="keep" data-i18n="trips.keep"></button>
+    <button class="btn" type="button" value="cancel" style="background: var(--danger); color: #fff;" data-i18n="trips.yes"></button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  function fill() {
+    var lang = window.currentLang();
+    document.querySelectorAll('.trip').forEach(function (trip) {
+      var place = window.RIHLATNA_PLACES.filter(function (p) { return p.id === trip.dataset.place; })[0];
+      if (!place) return;
+      trip.querySelector('[data-name]').textContent = place[lang].name;
+      trip.querySelector('[data-where]').textContent = place[lang].region + ' · ' + window.tHours(place.len);
+      trip.querySelector('img').alt = place[lang].name;
+    });
+  }
+  document.addEventListener('langchange', fill);
+
+  var dlg = document.getElementById('confirm-cancel');
+  var target = null;
+  document.querySelectorAll('[data-cancel]').forEach(function (b) {
+    b.addEventListener('click', function () { target = b.closest('.trip'); dlg.showModal(); });
+  });
+  dlg.querySelectorAll('button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (b.value === 'cancel' && target) {
+        target.classList.add('cancelled');
+        var badge = target.querySelector('.badge');
+        badge.className = 'badge cancelled';
+        badge.setAttribute('data-i18n', 'trips.cancelled');
+        badge.textContent = window.t('trips.cancelled');
+        target.querySelector('.actions').remove();
+      }
+      dlg.close();
+      if (!document.querySelector('.trip:not(.cancelled)')) document.getElementById('empty').classList.add('show');
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="morning">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>احجز رحلة · رحلتنا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="theme.css">
+<script src="i18n.js"></script>
+<script src="theme.js"></script>
+<style>
+  main { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; padding-top: 40px; padding-bottom: 80px; }
+  .steps { flex: 999 1 620px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+  h1 { margin: 6px 0 0; font-size: clamp(28px, 3vw, 38px); line-height: 1.2; }
+  :root[lang="ar"] h1 { font-size: clamp(24px, 2.4vw, 32px); line-height: 1.4; }
+  .step { display: flex; flex-direction: column; gap: 14px; }
+  .step-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+
+  .place-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .place-pick button { position: relative; padding: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); color: var(--ink); cursor: pointer; text-align: start; font: inherit; }
+  .place-pick img { width: 100%; height: 92px; object-fit: cover; }
+  .place-pick span { display: block; padding: 10px 12px 12px; font: 600 15px var(--sans); }
+  .place-pick small { display: block; margin-top: 3px; font: 400 12px var(--mono); color: var(--muted); }
+  .place-pick button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+  .dates { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .chip { flex: 0 0 auto; min-width: 76px; min-height: 66px; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
+  .chip small { display: block; font: 500 11px var(--mono); color: var(--muted); }
+  .chip b { display: block; margin-top: 3px; font: 400 26px 'Instrument Serif', serif; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip[aria-pressed="true"] small { color: var(--bg); opacity: 0.8; }
+
+  /* The day ruler: one cell per hour. In Arabic it reads right to left. */
+  .ruler { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
+  .slot { position: relative; min-height: 88px; border: 0; border-inline-end: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; padding: 12px 0 0; display: flex; flex-direction: column; align-items: center; font: 500 14px 'JetBrains Mono', monospace; }
+  .slot:last-child { border-inline-end: 0; }
+  .slot .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 28px; }
+  .slot.taken { cursor: not-allowed; color: var(--muted); }
+  .slot.taken .bar { background: repeating-linear-gradient(135deg, var(--muted) 0 1px, transparent 1px 7px); opacity: 0.5; border-top: 1px solid var(--line); }
+  .slot.blocked { cursor: not-allowed; color: var(--muted); opacity: 0.55; }
+  .slot.sel { background: var(--accent); color: var(--accent-ink); }
+  .slot.sel .bar { background: rgba(0,0,0,0.14); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 14px; height: 10px; margin-inline-end: 6px; vertical-align: -1px; border: 1px solid var(--line); }
+  .legend .l-sel { background: var(--accent); border-color: var(--accent); }
+  .legend .l-taken { background: repeating-linear-gradient(135deg, var(--muted) 0 1px, transparent 1px 4px); }
+
+  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); width: fit-content; }
+  .stepper button { width: 52px; height: 52px; border: 0; background: transparent; color: var(--ink); font: 400 24px var(--sans); cursor: pointer; }
+  .stepper output { min-width: 64px; text-align: center; font: 400 30px 'Instrument Serif', serif; }
+
+  aside { flex: 1 1 320px; min-width: 0; position: sticky; top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  aside img { width: 100%; height: 200px; object-fit: cover; }
+  aside .body { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  aside h2 { margin: 0; font-size: 26px; line-height: 1.25; }
+  aside dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; font-size: 15px; }
+  aside dt { padding-top: 2px; }
+  aside dd { margin: 0; }
+  aside .btn { width: 100%; min-height: 52px; }
+  .done { display: none; border: 1px solid var(--ok); border-radius: 4px; padding: 14px; }
+  .done.show { display: block; }
+  .done .mono { color: var(--ok); }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: calc(100% - 32px); background: var(--ink); color: var(--bg); border-radius: 4px; padding: 12px 18px; font: 500 15px var(--sans); display: none; }
+  .toast.show { display: block; }
+
+  @media (max-width: 720px) {
+    .ruler { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .slot { border-bottom: 1px solid var(--line); min-height: 72px; }
+    aside { position: static; }
+  }
+</style>
+</head>
+<body data-title="title.book">
+
+<header class="site-header" data-solid>
+  <div class="wrap bar">
+    <a class="logo" href="index.html" aria-label="رحلتنا Rihlatna">
+      <svg class="mark" viewBox="0 0 26 30" aria-hidden="true"><path d="M2.5 29V12.5a10.5 10.5 0 0 1 21 0V29" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M13 14.5l4.2 7.5H8.8z" fill="#D6A756"/></svg>
+      <span class="word">رحلتنا</span><span class="latin">Rihlatna</span>
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="index.html#places" data-i18n="nav.places"></a>
+      <a href="book.html" aria-current="page" data-i18n="nav.book"></a>
+      <a href="trips.html" data-i18n="nav.trips"></a>
+    </nav>
+    <div class="tools">
+      <button class="lang-switch" type="button">EN</button>
+      <button class="sky-switch" type="button"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="orb"></span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap page-main">
+  <div class="steps">
+    <div>
+      <span class="mono" style="color: var(--accent);" data-i18n="book.eyebrow"></span>
+      <h1 class="serif" data-i18n="book.title"></h1>
+    </div>
+
+    <section class="step">
+      <div class="step-head"><span class="mono muted" data-i18n="book.s1"></span></div>
+      <div class="place-pick" id="places"></div>
+    </section>
+
+    <section class="step">
+      <div class="step-head"><span class="mono muted" data-i18n="book.s2"></span><span class="mono muted" data-i18n="book.s2r"></span></div>
+      <div class="dates" id="dates"></div>
+    </section>
+
+    <section class="step">
+      <div class="step-head">
+        <span class="mono muted" data-i18n="book.s3"></span>
+        <span class="legend mono muted"><span><i class="l-sel"></i><span data-i18n="book.yours"></span></span><span><i class="l-taken"></i><span data-i18n="book.taken"></span></span><span><i></i><span data-i18n="book.open"></span></span></span>
+      </div>
+      <div class="ruler" id="ruler" role="group"></div>
+      <span class="muted" id="ruler-note" style="font-size: 14px; line-height: 1.6;"></span>
+    </section>
+
+    <section class="step">
+      <div class="step-head"><span class="mono muted" data-i18n="book.s4"></span></div>
+      <div class="stepper">
+        <button type="button" id="minus">−</button>
+        <output id="party" aria-live="polite">4</output>
+        <button type="button" id="plus">+</button>
+      </div>
+      <span class="muted" style="font-size: 14px;" data-i18n="book.s4d"></span>
+    </section>
+  </div>
+
+  <aside>
+    <img id="sum-img" src="img/hegra.webp" alt="" width="900" height="600">
+    <div class="body">
+      <span class="mono muted" data-i18n="book.sum"></span>
+      <h2 class="serif" id="sum-place"></h2>
+      <dl>
+        <dt class="mono muted" data-i18n="book.date"></dt><dd id="sum-date"></dd>
+        <dt class="mono muted" data-i18n="book.time"></dt><dd id="sum-time"></dd>
+        <dt class="mono muted" data-i18n="book.group"></dt><dd id="sum-party"></dd>
+      </dl>
+      <div class="done" id="done" role="status">
+        <div class="mono" data-i18n="book.done"></div>
+        <div style="margin-top: 6px;" data-i18n="book.doned"></div>
+        <a href="trips.html" style="display: inline-block; margin-top: 8px; color: var(--accent); font-weight: 600;" data-i18n="book.go"></a>
+      </div>
+      <button class="btn" id="confirm" type="button" disabled data-i18n="book.confirm"></button>
+      <span class="muted" style="font-size: 13px;" data-i18n="book.free"></span>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="alert" data-i18n="book.race"></div>
+
+<script>
+(function () {
+  var PLACES = window.RIHLATNA_PLACES;
+  var OPEN = 6, CLOSE = 19;
+  var DAY_INDEX = [0, 1, 2, 3, 4, 5, 6];      // Sat 31 Oct .. Fri 6 Nov
+  var NUMS = [31, 1, 2, 3, 4, 5, 6];
+  var MONTH = [0, 1, 1, 1, 1, 1, 1];
+  // Mock data: hours already held by other bookings, per date index.
+  var TAKEN = { 0: [6, 7, 8, 9], 1: [10, 11, 14], 2: [8], 3: [], 4: [12, 13], 5: [9, 16], 6: [] };
+  var NOW_HOUR_TODAY = 11;
+
+  var params = new URLSearchParams(location.search);
+  var wanted = params.get('place');
+  var wantedDate = parseInt(params.get('date'), 10);
+  var wantedParty = parseInt(params.get('party'), 10);
+  var state = {
+    place: PLACES.filter(function (p) { return p.id === wanted; })[0] || PLACES[1],
+    date: wantedDate >= 0 && wantedDate <= 6 ? wantedDate : 1,
+    start: null,
+    party: wantedParty >= 1 && wantedParty <= 8 ? wantedParty : 4
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = function (h) { return (h < 10 ? '0' : '') + h + ':00'; };
+  var lang = function () { return window.currentLang(); };
+  var hrs = function (n) { return window.tHours(n, true); };
+
+  function openStart(h) {
+    if (h + state.place.len > CLOSE) return 'blocked';
+    if (state.date === 0 && h < NOW_HOUR_TODAY) return 'blocked';
+    for (var k = 0; k < state.place.len; k++) {
+      if (TAKEN[state.date].indexOf(h + k) !== -1) return 'taken';
+    }
+    return 'open';
+  }
+
+  function render() {
+    var days = window.t('days'), months = window.t('months');
+
+    var places = $('places');
+    places.textContent = '';
+    PLACES.forEach(function (p) {
+      var L = p[lang()];
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', p === state.place ? 'true' : 'false');
+      var img = document.createElement('img');
+      img.src = p.img; img.alt = ''; img.width = 300; img.height = 200;
+      var label = document.createElement('span');
+      label.textContent = L.name;
+      var small = document.createElement('small');
+      small.textContent = L.region + ' · ' + hrs(p.len);
+      label.appendChild(small);
+      b.appendChild(img); b.appendChild(label);
+      b.addEventListener('click', function () { state.place = p; state.start = null; render(); });
+      places.appendChild(b);
+    });
+
+    var dates = $('dates');
+    dates.textContent = '';
+    DAY_INDEX.forEach(function (d, i) {
+      var c = document.createElement('button');
+      c.type = 'button'; c.className = 'chip';
+      c.setAttribute('aria-pressed', i === state.date ? 'true' : 'false');
+      var sm = document.createElement('small'); sm.textContent = i === 0 ? window.t('book.today') : days[d];
+      var bn = document.createElement('b'); bn.textContent = NUMS[i];
+      c.appendChild(sm); c.appendChild(bn);
+      c.addEventListener('click', function () { state.date = i; state.start = null; render(); });
+      dates.appendChild(c);
+    });
+
+    var ruler = $('ruler');
+    ruler.textContent = '';
+    ruler.setAttribute('aria-label', window.t('book.s3'));
+    for (var h = OPEN; h < CLOSE; h++) {
+      (function (hour) {
+        var held = TAKEN[state.date].indexOf(hour) !== -1;
+        var status = openStart(hour);
+        var inTrip = state.start !== null && hour >= state.start && hour < state.start + state.place.len;
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'slot' + (inTrip ? ' sel' : held ? ' taken' : status !== 'open' ? ' blocked' : '');
+        b.disabled = !inTrip && status !== 'open';
+        b.setAttribute('aria-pressed', inTrip ? 'true' : 'false');
+        b.setAttribute('aria-label', pad(hour) + (held ? ' · ' + window.t('book.taken') : ''));
+        b.textContent = pad(hour).slice(0, 2);
+        var bar = document.createElement('span'); bar.className = 'bar';
+        b.appendChild(bar);
+        b.addEventListener('click', function () { state.start = hour; $('done').classList.remove('show'); render(); });
+        ruler.appendChild(b);
+      })(h);
+    }
+    var L = state.place[lang()];
+    $('ruler-note').textContent = L.name + ' ' + window.t('book.note1') + ' ' + window.tHours(state.place.len) + (lang() === 'en' ? ', ' : '') + window.t('book.note2');
+
+    $('minus').setAttribute('aria-label', window.t('book.less'));
+    $('plus').setAttribute('aria-label', window.t('book.more'));
+    $('sum-img').src = state.place.img;
+    $('sum-img').alt = L.name;
+    $('sum-place').textContent = L.name;
+    $('sum-date').textContent = (state.date === 0 ? window.t('book.today') + ' · ' : days[DAY_INDEX[state.date]] + ' ') + NUMS[state.date] + ' ' + months[MONTH[state.date]];
+    $('sum-time').textContent = state.start === null ? window.t('book.pick') : pad(state.start) + ' - ' + pad(state.start + state.place.len);
+    $('sum-time').setAttribute('dir', state.start === null ? 'auto' : 'ltr');
+    $('sum-party').textContent = state.party + ' ' + window.t(state.party === 1 ? 'book.person' : 'book.people');
+    $('party').textContent = state.party;
+    $('confirm').disabled = state.start === null;
+  }
+
+  $('minus').addEventListener('click', function () { state.party = Math.max(1, state.party - 1); render(); });
+  $('plus').addEventListener('click', function () { state.party = Math.min(8, state.party + 1); render(); });
+  $('confirm').addEventListener('click', function () {
+    // Demo only: booking 15:00 on Sunday shows the "just taken" race message.
+    if (state.date === 1 && state.start === 15) {
+      TAKEN[1].push(15);
+      state.start = null;
+      render();
+      $('toast').classList.add('show');
+      setTimeout(function () { $('toast').classList.remove('show'); }, 3200);
+      return;
+    }
+    $('done').classList.add('show');
+    $('confirm').disabled = true;
+  });
+
+  document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>
