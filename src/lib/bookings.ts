@@ -6,7 +6,8 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { getOpenStartTimes, riyadhStartAt, riyadhToday, slotKeysFor } from './schedule';
-import { BookingError, type Booking, type ScheduleSettings, type Site, type TakenHour } from '../types';
+import { BookingError, type Booking, type RecurringBlock, type ScheduleSettings, type Site, type TakenHour } from '../types';
+import { getBlocks } from './blocks';
 
 const TAKEN_MESSAGE = 'That time was just taken — pick another';
 
@@ -14,7 +15,7 @@ const lockRef = (key: string) => doc(db, 'slotLocks', key);
 
 const toDate = (v: unknown) => (v instanceof Timestamp ? v.toDate() : new Date());
 
-function toBooking(snap: DocumentSnapshot): Booking {
+export function toBooking(snap: DocumentSnapshot): Booking {
   const d = snap.data({ serverTimestamps: 'estimate' })!;
   return {
     id: snap.id, customerId: d.customerId, customerName: d.customerName, customerEmail: d.customerEmail,
@@ -54,11 +55,13 @@ async function explainFailure(e: unknown, keys: string[], bookingId: string): Pr
   return err;
 }
 
-function checkStartTime(date: string, startHour: number, tripLength: number, settings: ScheduleSettings) {
+function checkStartTime(date: string, startHour: number, tripLength: number, settings: ScheduleSettings, blocks: RecurringBlock[] = []) {
   const now = new Date();
   if (riyadhStartAt(date, startHour) <= now) throw new BookingError('too-late', 'That start time has already passed.');
   if (!getOpenStartTimes({ date, tripLength, settings, taken: [], now }).includes(startHour))
     throw new BookingError('invalid', 'That start time is outside Operating Hours or the Booking Window.');
+  if (!getOpenStartTimes({ date, tripLength, settings, taken: [], now, blocks }).includes(startHour))
+    throw new BookingError('blocked', 'The Provider is unavailable at that time.');
 }
 
 export async function getSites(): Promise<Site[]> {
@@ -91,7 +94,7 @@ export async function createBooking(input: { site: Site; date: string; startHour
   const user = requireUser();
   if (!Number.isInteger(partySize) || partySize < 1 || partySize > 8)
     throw new BookingError('invalid', 'Party Size must be between 1 and 8.');
-  checkStartTime(date, startHour, site.tripLength, await getScheduleSettings());
+  checkStartTime(date, startHour, site.tripLength, await getScheduleSettings(), await getBlocks());
 
   const bookingRef = doc(collection(db, 'bookings'));
   const slotKeys = slotKeysFor(date, startHour, site.tripLength);
@@ -120,6 +123,7 @@ export async function createBooking(input: { site: Site; date: string; startHour
 export async function rescheduleBooking(bookingId: string, to: { date: string; startHour: number }): Promise<Booking> {
   requireUser();
   const settings = await getScheduleSettings();
+  const blocks = await getBlocks();
   const ref = doc(db, 'bookings', bookingId);
   let newKeys: string[] = [];
 
@@ -131,7 +135,7 @@ export async function rescheduleBooking(bookingId: string, to: { date: string; s
       if (current.status !== 'confirmed') throw new BookingError('invalid', 'Only Confirmed Bookings can be rescheduled.');
       if (current.startAt <= new Date()) throw new BookingError('too-late', 'This trip has already started.');
       if (current.date === to.date && current.startHour === to.startHour) return current;
-      checkStartTime(to.date, to.startHour, current.tripLength, settings);
+      checkStartTime(to.date, to.startHour, current.tripLength, settings, blocks);
 
       newKeys = slotKeysFor(to.date, to.startHour, current.tripLength);
       const locks = await Promise.all(newKeys.map(k => tx.get(lockRef(k))));

@@ -41,6 +41,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Change request: recurring unavailable time. Public read so the booking page can hide blocked
+    // hours; only the Provider can add or remove one. Bookings are never touched by a block: the
+    // conflict is computed from these documents, so existing booking data stays intact.
+    match /blocks/{blockId} {
+      function validBlock() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['weekdays', 'startHour', 'endHour', 'label', 'createdBy', 'createdAt'])
+          && d.weekdays is list && d.weekdays.size() >= 1 && d.weekdays.size() <= 7
+          && d.startHour is int && d.startHour >= 0 && d.startHour <= 23
+          && d.endHour is int && d.endHour > d.startHour && d.endHour <= 24
+          && d.label is string && d.label.size() <= 60
+          && d.createdBy == request.auth.uid
+          && d.createdAt == request.time;
+      }
+      allow read: if true;
+      allow create: if isProvider() && validBlock();
+      allow delete: if isProvider();
+      allow update: if false;
+    }
+
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid

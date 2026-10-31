@@ -4,8 +4,10 @@ import { Page } from '../components/Layout';
 import { dateLabel, timeRange } from '../format';
 import { useApp } from '../i18n';
 import { useAuth } from '../lib/auth';
+import { watchBlocks } from '../lib/blocks';
 import { cancelBooking, watchMyBookings } from '../lib/bookings';
-import { BookingError, type Booking } from '../types';
+import { overlapsBlock } from '../lib/schedule';
+import { BookingError, type Booking, type RecurringBlock } from '../types';
 import '../styles/trips.css';
 
 const CalendarIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>;
@@ -20,6 +22,8 @@ export default function Trips() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const [blocks, setBlocks] = useState<RecurringBlock[]>([]);
+  useEffect(() => watchBlocks(setBlocks), []);
 
   useEffect(() => {
     if (!user) return;
@@ -74,6 +78,8 @@ export default function Trips() {
           const started = b.startAt <= now;
           const canChange = b.status === 'confirmed' && !started;
           const badge = b.status === 'cancelled' ? 'cancelled' : 'confirmed';
+          // The trip was booked before the provider blocked this time: flag it, never change it.
+          const clash = b.status === 'confirmed' && !started && blocks.some(bl => overlapsBlock(b, bl));
           return (
             <article key={b.id} className={'trip' + (b.status === 'cancelled' ? ' cancelled' : '')}>
               <img src={p?.img ?? '/img/elephant-card.webp'} alt={L?.name ?? b.siteName} width={900} height={600} />
@@ -85,6 +91,7 @@ export default function Trips() {
                   <span><ClockIcon />{timeRange(b.startHour, b.tripLength)}</span>
                   <span><PeopleIcon />{b.partySize} {t(b.partySize === 1 ? 'book.person' : 'book.people')}</span>
                 </div>
+                {clash && <p className="form-error" role="status" style={{ marginTop: 4 }}>{t('trips.conflict')}</p>}
               </div>
               <span className={`badge ${badge}`}>
                 {b.status === 'completed' || (started && b.status === 'confirmed') ? t('trips.past') : t(`trips.${badge}`)}

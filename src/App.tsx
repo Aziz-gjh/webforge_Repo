@@ -5,12 +5,18 @@ import Book from './pages/Book';
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import Trips from './pages/Trips';
+import { useIsProvider } from './lib/auth';
+import ProviderBlocks from './pages/provider/ProviderBlocks';
 import ProviderSchedule from './pages/provider/ProviderSchedule';
 
 function Provider() {
+  const { isProvider } = useIsProvider();
   return (
     <Page title="nav.provider">
-      <div className="provider-wrap"><ProviderSchedule /></div>
+      <div className="provider-wrap">
+        {isProvider && <ProviderBlocks />}
+        <ProviderSchedule />
+      </div>
     </Page>
   );
 }

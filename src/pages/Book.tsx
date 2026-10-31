@@ -5,9 +5,10 @@ import { PLACES, type Place } from '../content';
 import { dayParts, dateLabel, hourLabel, timeRange } from '../format';
 import { useApp } from '../i18n';
 import { signInWithGoogle, useAuth } from '../lib/auth';
+import { watchBlocks } from '../lib/blocks';
 import { createBooking, getScheduleSettings, getSites, rescheduleBooking, watchMyBookings, watchTakenHours } from '../lib/bookings';
-import { getOpenStartTimes, windowDates } from '../lib/schedule';
-import { BookingError, type Booking, type ScheduleSettings, type Site, type TakenHour } from '../types';
+import { blockedHours, getOpenStartTimes, windowDates } from '../lib/schedule';
+import { BookingError, type Booking, type RecurringBlock, type ScheduleSettings, type Site, type TakenHour } from '../types';
 import '../styles/book.css';
 
 type Choice = { place: Place; site: Site };
@@ -31,6 +32,8 @@ export default function Book() {
     return Number.isInteger(n) && n >= 1 && n <= 8 ? n : 4;
   });
   const [taken, setTaken] = useState<TakenHour[]>([]);
+  const [blocks, setBlocks] = useState<RecurringBlock[]>([]);
+  useEffect(() => watchBlocks(setBlocks), []);
   const [current, setCurrent] = useState<Booking | null>(null);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -98,8 +101,8 @@ export default function Book() {
   const tripLength = choice?.site.tripLength ?? 1;
   const ignore = current?.id;
   const open = useMemo(() => (settings && date
-    ? getOpenStartTimes({ date, tripLength, settings, taken, now, ignoreBookingId: ignore })
-    : []), [settings, date, tripLength, taken, now, ignore]);
+    ? getOpenStartTimes({ date, tripLength, settings, taken, now, ignoreBookingId: ignore, blocks })
+    : []), [settings, date, tripLength, taken, now, ignore, blocks]);
 
   // Drop a selection that is no longer open (someone else just took it).
   useEffect(() => { if (start !== null && !open.includes(start)) setStart(null); }, [open, start]);
@@ -125,6 +128,7 @@ export default function Book() {
 
   const days = list('days'), months = list('months');
   const takenHours = new Set(taken.filter(x => x.bookingId !== ignore).map(x => x.hour));
+  const blockedNow = date ? blockedHours(date, blocks) : new Set<number>();
   const currentHours = current && current.date === date
     ? new Set(Array.from({ length: current.tripLength }, (_, i) => current.startHour + i)) : new Set<number>();
 
@@ -202,8 +206,9 @@ export default function Book() {
                 const cls = inTrip ? ' sel' : held ? ' taken' : !canStart ? ' blocked' : '';
                 return (
                   <button key={h} type="button" className={'slot' + cls} disabled={!inTrip && !canStart}
-                    aria-pressed={inTrip} title={currentHours.has(h) ? t('book.current') : undefined}
-                    aria-label={hourLabel(h) + (held ? ` · ${t('book.taken')}` : '')}
+                    aria-pressed={inTrip}
+                    title={blockedNow.has(h) ? t('book.blocked') : currentHours.has(h) ? t('book.current') : undefined}
+                    aria-label={hourLabel(h) + (held ? ` · ${t('book.taken')}` : blockedNow.has(h) ? ` · ${t('book.blocked')}` : '')}
                     onClick={() => { setStart(h); setDone(false); }}>
                     {String(h).padStart(2, '0')}
                     {currentHours.has(h) && !inTrip && <span className="mono" style={{ fontSize: 9 }}>●</span>}
