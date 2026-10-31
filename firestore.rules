@@ -1,0 +1,158 @@
+rules_version = '2';
+
+// Access control for AlUla Site Tours. See docs/mvp-plan.md "Security rules" and ADRs 0001/0002.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isCustomer() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    function isProvider() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/providers/$(request.auth.uid));
+    }
+
+    function lockPath(key) {
+      return /databases/$(database)/documents/slotLocks/$(key);
+    }
+
+    function lockHeldBy(key, bookingId) {
+      return existsAfter(lockPath(key)) && getAfter(lockPath(key)).data.bookingId == bookingId;
+    }
+
+    // Trip Lengths are at most 3 h, so up to three locks are checked one by one.
+    function locksHeldBy(keys, bookingId) {
+      return keys.size() >= 1 && keys.size() <= 3
+        && lockHeldBy(keys[0], bookingId)
+        && (keys.size() < 2 || lockHeldBy(keys[1], bookingId))
+        && (keys.size() < 3 || lockHeldBy(keys[2], bookingId));
+    }
+
+    match /sites/{siteId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'email']);
+    }
+
+    // Created by hand in the console only.
+    match /providers/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /bookings/{bookingId} {
+
+      function validNewBooking() {
+        let d = request.resource.data;
+        let site = get(/databases/$(database)/documents/sites/$(d.siteId)).data;
+        return d.keys().hasOnly(['customerId', 'customerName', 'customerEmail', 'siteId', 'siteName',
+                                 'tripLength', 'date', 'startHour', 'startAt', 'slotKeys', 'partySize',
+                                 'status', 'createdAt', 'updatedAt', 'reminderSentFor'])
+          && d.customerId == request.auth.uid
+          && d.customerEmail == request.auth.token.email
+          && d.customerName is string
+          && d.status == 'confirmed'
+          && d.partySize is int && d.partySize >= 1 && d.partySize <= 8
+          && d.tripLength == site.tripLength
+          && d.siteName == site.name
+          && d.date is string && d.startHour is int
+          && d.startAt is timestamp && d.startAt > request.time
+          && d.slotKeys is list && d.slotKeys.size() == d.tripLength
+          && d.reminderSentFor == null
+          && d.createdAt == request.time && d.updatedAt == request.time
+          && locksHeldBy(d.slotKeys, bookingId);
+      }
+
+      function changed() {
+        return request.resource.data.diff(resource.data).affectedKeys();
+      }
+
+      function isCancel() {
+        return changed().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      function isReschedule() {
+        let d = request.resource.data;
+        return changed().hasOnly(['date', 'startHour', 'startAt', 'slotKeys', 'updatedAt', 'reminderSentFor'])
+          && d.status == 'confirmed'
+          && d.reminderSentFor == null
+          && d.date is string && d.startHour is int
+          && d.startAt is timestamp && d.startAt > request.time
+          && d.slotKeys is list && d.slotKeys.size() == resource.data.tripLength
+          && d.updatedAt == request.time
+          && locksHeldBy(d.slotKeys, bookingId);
+      }
+
+      function isOwnerUpdate() {
+        return isCustomer()
+          && resource.data.customerId == request.auth.uid
+          && resource.data.status == 'confirmed'
+          && resource.data.startAt > request.time
+          && (isCancel() || isReschedule());
+      }
+
+      function isProviderUpdate() {
+        return isProvider()
+          && resource.data.status == 'confirmed'
+          && changed().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['cancelled', 'completed']
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      // A Customer's list query must filter on customerId == their uid.
+      allow read: if request.auth != null
+        && (resource.data.customerId == request.auth.uid || isProvider());
+      allow create: if isCustomer() && validNewBooking();
+      allow update: if isOwnerUpdate() || isProviderUpdate();
+      allow delete: if false;
+    }
+
+    // One record per booked hour. Public, holds no customer details, never overwritten.
+    match /slotLocks/{lockId} {
+
+      function bookingPath(id) {
+        return /databases/$(database)/documents/bookings/$(id);
+      }
+
+      function validNewLock() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['bookingId', 'date', 'hour'])
+          && d.date == lockId.split('T')[0]
+          && d.hour is int
+          && existsAfter(bookingPath(d.bookingId))
+          && getAfter(bookingPath(d.bookingId)).data.customerId == request.auth.uid
+          && getAfter(bookingPath(d.bookingId)).data.status == 'confirmed'
+          && lockId in getAfter(bookingPath(d.bookingId)).data.slotKeys;
+      }
+
+      // Owner may release a lock when, after the write, its booking is cancelled or no longer lists it.
+      function ownerReleases() {
+        let id = resource.data.bookingId;
+        return existsAfter(bookingPath(id))
+          && getAfter(bookingPath(id)).data.customerId == request.auth.uid
+          && (getAfter(bookingPath(id)).data.status == 'cancelled'
+              || !(lockId in getAfter(bookingPath(id)).data.slotKeys));
+      }
+
+      allow read: if true;
+      allow create: if isCustomer() && validNewLock();
+      allow update: if false;
+      allow delete: if isProvider() || (isCustomer() && ownerReleases());
+    }
+  }
+}
