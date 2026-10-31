@@ -15,7 +15,10 @@
   background: var(--provider-bg);
   font-family: var(--font-sans, system-ui, sans-serif);
   line-height: 1.6;
+  text-align: start;
 }
+.provider-page[lang="ar"] .provider-eyebrow, .provider-page[lang="ar"] .provider-count { letter-spacing: 0; }
+.provider-page a[dir="ltr"] { display: inline-block; unicode-bidi: isolate; }
 .provider-page *, .provider-dialog * { box-sizing: border-box; }
 .provider-page h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.8rem); line-height: 1.2; }
 .provider-page h2 { margin: 0; font-size: 1.15rem; }

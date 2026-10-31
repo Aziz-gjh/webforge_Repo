@@ -18,6 +18,7 @@ vi.mock('../../src/lib/bookings', () => ({
   watchBookingsForDate: mocks.watch, cancelBooking: mocks.cancel, markCompleted: mocks.complete,
 }));
 vi.mock('../../src/lib/schedule', () => ({ riyadhToday: () => '2026-11-01' }));
+vi.mock('../../src/i18n', () => ({ useApp: () => ({ lang: 'en' }) }));
 
 function booking(overrides: Partial<Booking> = {}): Booking {
   return {
