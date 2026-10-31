@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Replace tours.example.invalid with the confirmed production hostname before submission. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://tours.example.invalid/</loc></url>
+  <url><loc>https://tours.example.invalid/book</loc></url>
+</urlset>

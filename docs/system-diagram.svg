@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" role="img" aria-labelledby="title desc"><title id="title">AlUla Site Tours system diagram</title><desc id="desc">React connects to Google authentication and Firestore protected by security rules. Vercel Cron calls the authenticated Reminder function, which reads Bookings and sends email through Resend. Cloudflare manages DNS.</desc><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#e4bf7c"/></marker></defs><rect width="1600" height="1180" fill="#101722"/>
+<path d="M460,220 l190,0" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M460,285 l190,195" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M1030,565 l100,0" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M260,610 l0,100" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M460,775 l190,-115" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M460,830 l190,140" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M260,940 l0,-70" stroke="#e4bf7c" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="60" y="140" width="400" height="170" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="80" y="180.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Browser · React app</text>
+<text x="80" y="213.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Visitor / Customer / Provider</text>
+<text x="80" y="235.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Book · Reschedule · Cancel</text>
+<text x="80" y="257.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Provider Schedule + live updates</text>
+<rect x="650" y="140" width="380" height="170" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="670" y="180.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Firebase Auth</text>
+<text x="670" y="213.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Google popup sign-in</text>
+<text x="670" y="235.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Verified Google accounts</text>
+<text x="670" y="257.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Provider role: providers/{uid}</text>
+<rect x="60" y="500" width="400" height="110" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="80" y="540.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Vercel Cron · daily</text>
+<text x="80" y="573.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">0 15 * * * UTC · about 18:00 Riyadh</text>
+<text x="80" y="595.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Authorization: Bearer CRON_SECRET</text>
+<rect x="650" y="430" width="380" height="285" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="670" y="470.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Firestore</text>
+<text x="670" y="503.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">sites + settings/schedule</text>
+<text x="670" y="525.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">users + providers</text>
+<text x="670" y="547.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">bookings · private Customer details</text>
+<text x="670" y="569.3" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">slotLocks · bookingId, date, hour</text>
+<text x="670" y="591.4" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17"></text>
+<text x="670" y="613.5" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Booking + hour locks: atomic writes</text>
+<text x="670" y="635.6" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Reschedule preserves shared locks</text>
+<rect x="1130" y="430" width="410" height="285" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="1150" y="470.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Security rules</text>
+<text x="1150" y="503.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Visitor: public Sites + hour locks</text>
+<text x="1150" y="525.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Customer: own Bookings only</text>
+<text x="1150" y="547.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Provider: every Booking</text>
+<text x="1150" y="569.3" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17"></text>
+<text x="1150" y="591.4" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Verified Google sign-in required</text>
+<text x="1150" y="613.5" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Locks: create only, never overwrite</text>
+<text x="1150" y="635.6" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Rules enforce browser permissions</text>
+<rect x="60" y="710" width="400" height="160" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="80" y="750.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Vercel</text>
+<text x="80" y="783.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Vite static app + app-route rewrites</text>
+<text x="80" y="805.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">api/send-reminders · Node.js</text>
+<text x="80" y="827.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Admin SDK: server credentials only</text>
+<text x="80" y="849.3" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">No secrets in browser code</text>
+<rect x="650" y="900" width="380" height="140" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="670" y="940.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Resend</text>
+<text x="670" y="973.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Verified sending domain</text>
+<text x="670" y="995.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Tomorrow’s Confirmed Bookings</text>
+<text x="670" y="1017.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Retry idempotency + email delivery</text>
+<rect x="60" y="940" width="400" height="130" rx="12" fill="#182230" stroke="#e4bf7c" stroke-width="2"/>
+<text x="80" y="980.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="22">Cloudflare DNS</text>
+<text x="80" y="1013.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">App CNAME → Vercel · DNS only</text>
+<text x="80" y="1035.1" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Email verification records → Resend</text>
+<text x="80" y="1057.2" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="17">Search Console verification TXT</text>
+<text x="480" y="202.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">Google sign-in</text>
+<text x="480" y="274.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">Transactions +</text>
+<text x="480" y="292.2" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">live snapshots</text>
+<text x="1040" y="547.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">enforced</text>
+<text x="282" y="664.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">daily GET</text>
+<text x="470" y="794.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">Admin: read Bookings</text>
+<text x="470" y="812.2" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">write reminderSentFor</text>
+<text x="520" y="834.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">Reminder email</text>
+<text x="282" y="913.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="14">DNS only</text>
+<text x="60" y="72.0" fill="#e4bf7c" font-family="Arial,sans-serif" font-size="32">ALULA SITE TOURS // SYSTEM MAP</text>
+<text x="60" y="108.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="18">Agreed architecture · Person 3 implementation + shared components being built by Persons 1 and 2</text>
+<text x="60" y="1128.0" fill="#f4f0e7" font-family="Arial,sans-serif" font-size="18">Privacy: public hour locks contain no Customer names or email addresses.</text>
+<text x="60" y="1158.0" fill="#b8c0ca" font-family="Arial,sans-serif" font-size="18">The Reminder function is the only Admin SDK exception; it writes only reminderSentFor.</text>
+</svg>

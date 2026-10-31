@@ -1,0 +1,63 @@
+Person 3 local verification — 2026-10-31
+Isolated contract fixture; not a production or live Firebase test.
+
+
+Strict TypeScript
+Exit code: 0
+
+
+Tests with TZ=Pacific/Honolulu
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ jsx: 'automatic' }`
+
+ RUN  v5.0.5 /private/tmp/webforge-part3-check/fixture
+
+
+ Test Files  2 passed (2)
+      Tests  27 passed (27)
+   Start at  22:20:10
+   Duration  822ms (environment 38%, import 34%, tests 25%, transform 3%)
+
+Exit code: 0
+
+
+Tests with TZ=Asia/Tokyo
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ jsx: 'automatic' }`
+
+ RUN  v5.0.5 /private/tmp/webforge-part3-check/fixture
+
+
+ Test Files  2 passed (2)
+      Tests  27 passed (27)
+   Start at  17:20:11
+   Duration  513ms (tests 36%, environment 35%, import 28%, transform 1%)
+
+Exit code: 0
+
+
+Production Vite bundle using contract fixture
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 19 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.17 kB │ gzip:  0.54 kB
+dist/assets/index-DwUAoLc1.css    5.32 kB │ gzip:  1.67 kB
+dist/assets/index-Cb1_O0eD.js   229.58 kB │ gzip: 71.52 kB
+
+✓ built in 606ms
+Exit code: 0
+
+
+Temporary dependency versions
+{
+  "typescript": "7.0.2",
+  "vitest": "5.0.5",
+  "vite": "8.3.5",
+  "react": "19.3.1",
+  "react-dom": "19.3.1",
+  "firebase-admin": "14.5.0",
+  "resend": "6.37.0",
+  "jsdom": "30.1.3",
+  "@testing-library/react": "16.3.3",
+  "@testing-library/user-event": "14.6.8"
+}
