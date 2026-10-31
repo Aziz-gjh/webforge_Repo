@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 type AuthUser = { uid: string; name: string; email: string };
@@ -9,10 +9,14 @@ const toAuthUser = (u: User): AuthUser =>
   ({ uid: u.uid, name: u.displayName ?? u.email ?? '', email: u.email ?? '' });
 
 // Popup, not redirect: redirect sign-in breaks in browsers that block third-party storage.
-export async function signInWithGoogle(): Promise<void> {
+// The account is the users/{uid} record: created (with createdAt) the first time, refreshed after.
+export async function signInWithGoogle(): Promise<{ created: boolean }> {
   const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
   const { name, email } = toAuthUser(user);
-  await setDoc(doc(db, 'users', user.uid), { name, email }, { merge: true });
+  const ref = doc(db, 'users', user.uid);
+  const created = !(await getDoc(ref)).exists();
+  await setDoc(ref, created ? { name, email, createdAt: serverTimestamp() } : { name, email }, { merge: true });
+  return { created };
 }
 
 export function signOutUser(): Promise<void> {
