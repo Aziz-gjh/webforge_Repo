@@ -1,5 +1,7 @@
 # Person 3 local verification — 31 October 2026
 
+Historical isolated check. The newer [Part 2 integration verification](part2-person3-integration.md) records 38 passing tests and the actual checkout build after merging Person 2's implementation.
+
 Branch: `person3` (originally prepared on `part3-platform`). These checks validate Person 3's code locally. They do not establish that the complete app is deployed, that Firebase rules work, or that an email reaches a real inbox.
 
 ## Environment and method

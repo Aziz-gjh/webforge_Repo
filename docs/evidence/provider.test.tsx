@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act } from 'react';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProviderSchedule from '../../src/pages/provider/ProviderSchedule';
 import type { Booking } from '../../src/types';
@@ -96,7 +95,8 @@ describe('Provider Schedule', () => {
     expect(mocks.cancel).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Cancel Booking' }));
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel Booking' }));
-    expect(mocks.cancel).toHaveBeenCalledExactlyOnceWith('booking-a');
+    expect(mocks.cancel).toHaveBeenCalledTimes(1);
+    expect(mocks.cancel).toHaveBeenCalledWith('booking-a');
     expect(screen.getByRole('status').textContent).toContain('Booking cancelled');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
@@ -108,7 +108,8 @@ describe('Provider Schedule', () => {
     await userEvent.click(screen.getByRole('button', { name: /View details/ }));
     const button = screen.getByRole('button', { name: 'Mark Completed' });
     fireEvent.click(button); fireEvent.click(button);
-    expect(mocks.complete).toHaveBeenCalledExactlyOnceWith('booking-a');
+    expect(mocks.complete).toHaveBeenCalledTimes(1);
+    expect(mocks.complete).toHaveBeenCalledWith('booking-a');
     expect((button as HTMLButtonElement).disabled).toBe(true);
     await act(async () => resolve());
     expect(screen.getByRole('status').textContent).toContain('Booking marked Completed');

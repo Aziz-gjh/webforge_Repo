@@ -2,7 +2,7 @@
 
 Private guided trips to Elephant Rock, AlUla Old Town, Hegra and Harrat Viewpoint. One Provider manages one Schedule shared across all Sites. Customers book their own group; Party Size never changes which Slots are open.
 
-**Live URL:** not deployed yet. This checkout contains the plans and Person 3's platform implementation. Person 1's app skeleton and Person 2's Firebase contract are still required to run the complete app.
+**Live URL:** not deployed yet. Person 2's Firebase implementation and basic Vite skeleton are merged into `person3`. Person 3's Provider page and Reminder function are included. Person 1's Customer screens and app routing are still pending; the current app entry shows the Vite starter.
 
 ## Stack and ownership
 
@@ -18,9 +18,9 @@ Vite, React, TypeScript, React Router, Tailwind CSS, Firebase Google sign-in and
 
 ![System diagram](docs/system-diagram.png)
 
-The [editable Excalidraw diagram](docs/system-diagram.excalidraw) shows the agreed architecture, including components still being built by Persons 1 and 2.
+The [editable Excalidraw diagram](docs/system-diagram.excalidraw) shows the agreed architecture. The Customer screens and app routing from Person 1 are still being built.
 
-Slots are calculated from Operating Hours and the Booking Window. A Booking claims one Firestore `slotLocks` record per hour in a transaction. Locks can be created but never overwritten, preventing overlaps across every Site. Rescheduling preserves shared hours and swaps the remaining locks atomically; cancellation releases locks in the same batch as its status change. Person 2 implements and verifies these protections.
+Slots are calculated from Operating Hours and the Booking Window. A Booking claims one Firestore `slotLocks` record per hour in a transaction. Locks can be created but never overwritten, preventing overlaps across every Site. Rescheduling preserves shared hours and swaps the remaining locks atomically; cancellation releases locks in the same batch as its status change. Person 2's implementation and [access-test evidence](docs/evidence/access-tests.md) are included.
 
 | Role | Access enforced by Firestore rules |
 | --- | --- |
@@ -39,25 +39,28 @@ Follow [Person 3 setup](docs/part3-setup.md) for service configuration and integ
 
 ## Run locally
 
-After Person 1's skeleton and Person 2's contract are merged, install Node.js 22 or newer:
+Install Node.js 24.12 or newer within the 24.x release line, matching the package requirement:
 
 ```sh
 npm install
-cp .env.example .env.local
+cp -n .env.example .env.local
 # Fill in Person 2's VITE_FIREBASE_* settings in .env.local.
 npm run dev
 ```
 
-The complete app cannot run from this branch alone yet. Vite serves the app; the Reminder endpoint runs on Vercel. Keep the service account, email key and cron secret in Vercel's environment settings, never in browser code or variables prefixed with `VITE_`.
+Vite currently serves the starter page until Person 1's screens and routes arrive. The Provider component is ready for their `/provider` route. Real sign-in and data access need populated Firebase browser settings. The Reminder endpoint runs on Vercel. Keep the service account, email key and cron secret in Vercel's environment settings, never in browser code or variables prefixed with `VITE_`.
 
 ## Verification
 
-27 Person 3 tests pass against isolated stubs matching the shared contract, along with a strict TypeScript check. See [verification evidence](docs/evidence/part3-verification.md) for the method and limits. Production checks remain pending.
+All **38 tests pass in the merged checkout**: Person 2's 11 scheduling tests and Person 3's 27 Reminder/Provider tests. The production build and a separate strict server/test type check also pass with React 18, TypeScript 5.6 and Vitest 2. See [integration evidence](docs/evidence/part2-person3-integration.md). Provider tests mock data responses; live Google sign-in, Provider writes and email delivery remain pending.
 
-With the shared dependencies installed:
+The earlier [isolated verification](docs/evidence/part3-verification.md) is retained as historical evidence.
+
+After `npm install`:
 
 ```sh
-npx vitest run docs/evidence/reminders.test.ts docs/evidence/provider.test.tsx
+npm test -- --run
+npm run build
 ```
 
 ## Trade-offs and known limitations

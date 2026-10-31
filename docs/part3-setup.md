@@ -1,14 +1,14 @@
 # Person 3: setup and integration
 
-Local code is on `person3`. No live project, domain, email delivery or search verification has been claimed. Those steps need the team's service accounts and the merged app.
+Code is on `person3`, including Person 2's merged Firebase code and basic Vite skeleton. All 38 tests and the build pass in this checkout. Person 1's Customer screens and routing are pending. No live project, domain, email delivery or search verification has been claimed.
 
 ## 1. Get the first website address
 
 Vercel hosts the website. Start with its included `*.vercel.app` address; connect a custom domain afterwards.
 
 1. Sign in to [Vercel](https://vercel.com/) with access to the GitHub repository.
-2. Choose **Add New → Project**, import `Aziz-gjh/webforge_Repo`, and select **Vite**. Keep the repository root. The checked-in configuration runs `npm run build` and serves `dist/`.
-3. Use `main` as the production branch. This needs Person 1's runnable skeleton before a Vite deployment can succeed. Once pushed, `person3` should get a preview; merge through the team's usual review process.
+2. Choose **Add New → Project**, import `Aziz-gjh/webforge_Repo`, and select **Vite**. Keep the repository root. The checked-in configuration runs `npm run build` and serves `dist/`. The package's Node engine selects 24.x; use Node 24.12 or newer locally to satisfy the merged Firebase SDK requirements. See [Vercel's Node configuration](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions).
+3. Use `main` as the production branch. Once pushed, `person3` should get a preview; merge through the team's usual review process. The current skeleton builds but shows the Vite starter until Person 1's screens and routes are integrated.
 4. Record the actual deployed address in the README. The competition still needs a custom domain; the Vercel address is useful while DNS is being prepared.
 
 The optional Vercel integration can help operate the project after connection. It is not connected in this session.
@@ -24,11 +24,11 @@ import ProviderSchedule from './pages/provider/ProviderSchedule';
 <Route path="/provider" element={<ProviderSchedule />} />
 ```
 
-Person 2 provides `useAuth`, `useIsProvider`, `watchBookingsForDate`, `cancelBooking`, `markCompleted` and `riyadhToday`, and deploys the rules and indexes. These imports follow the shared contract exactly. After the Provider signs in once, Person 2 creates `providers/{uid}` for that account.
+Person 2's merged code provides `useAuth`, `useIsProvider`, `watchBookingsForDate`, `cancelBooking`, `markCompleted` and `riyadhToday`. The Provider page type-checks against these actual imports. Confirm the deployed rules/indexes with Person 2. After the Provider signs in once, Person 2 creates `providers/{uid}` for that account.
 
 The page uses local controls while Person 1's component props are unknown. Its scoped CSS reads shared theme variables and has dark/sand/teal fallbacks. Adopt Person 1's `Button`, `StatusBadge` and `ConfirmDialog` when their interfaces are agreed. The watcher has no asynchronous error callback; agree any extension with Person 2 first. The page currently provides an initial-load timeout and Retry.
 
-Person 1's shared install must include `firebase-admin` and `resend`, already in the team plan. Provider interaction tests additionally use development packages `jsdom`, `@testing-library/react` and `@testing-library/user-event`; coordinate that package change with Person 1. Vitest should use their React/Vite JSX configuration.
+The merged package includes `firebase-admin` and `resend`. Provider test dependencies `jsdom`, `@testing-library/react` and `@testing-library/user-event` are now recorded in the manifest and lockfile. Keep these additions and the Node engine requirement when integrating Person 1's package changes. The tests work with the merged React 18 / Vitest 2 setup.
 
 ## 3. Configure Vercel environment variables
 
@@ -87,7 +87,8 @@ The endpoint accepts GET. With configuration present it returns 401 without the 
 
 ## Remaining delivery checks
 
-- [ ] Merge the shared skeleton and Firebase implementation; wire `/provider`.
+- [x] Merge the basic skeleton and Firebase implementation; pass all 38 tests and the build.
+- [ ] Integrate Person 1's Customer screens and wire `/provider`.
 - [ ] Set the real production address and server environment variables.
 - [ ] Deploy, verify domain/auth/email and run the production demo.
 - [ ] Verify search services and collect PageSpeed and responsive evidence.

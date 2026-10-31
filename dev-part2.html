@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Part 2 test bench</title>
+    <style>
+      body { font: 14px system-ui, sans-serif; background: #111; color: #eee; padding: 16px; max-width: 900px }
+      button { margin: 2px; padding: 4px 8px } button[aria-pressed=true] { background: #c9a227 }
+      section { border: 1px solid #444; padding: 8px; margin: 8px 0 } pre { white-space: pre-wrap; color: #9fd }
+    </style>
+  </head>
+  <body>
+    <h1>Part 2 test bench (dev only)</h1>
+    <section><span id="who">…</span> <button id="signin">Sign in with Google</button> <button id="signout">Sign out</button></section>
+    <section>
+      Site <select id="site"></select> Date <select id="date"></select> Party <input id="party" type="number" value="2" min="1" max="8" style="width:4em">
+      <div>Taken: <span id="taken"></span></div>
+      <div id="times"></div>
+      <button id="book">Book selected</button>
+    </section>
+    <section><b>My trips</b><div id="mine"></div></section>
+    <section><button id="race">Run race test</button> <button id="breakit">Run break-it tests (needs another account's booking)</button></section>
+    <pre id="log"></pre>
+    <script type="module" src="/src/dev/part2-bench.ts"></script>
+  </body>
+</html>
